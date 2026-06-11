@@ -24,9 +24,17 @@ st.set_page_config(
 DATA_DIR = Path(__file__).parent / "data"
 
 def read_source(csv_name, excel_file=None, sheet_name=None):
-    """Read from uploaded Excel master if available; otherwise use default CSV."""
+    """Read from uploaded Excel master if available; otherwise use default CSV.
+
+    Important fix:
+    Streamlit's uploaded file object is reused many times while loading sheets.
+    We reset the pointer before every pd.read_excel call. If a sheet is missing
+    or an older Excel template has a different structure, the app falls back to
+    the default demo CSV instead of stopping.
+    """
     if excel_file is not None and sheet_name is not None:
         try:
+            excel_file.seek(0)
             return pd.read_excel(excel_file, sheet_name=sheet_name)
         except Exception:
             try:
