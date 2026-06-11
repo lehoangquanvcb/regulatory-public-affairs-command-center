@@ -1,0 +1,10 @@
+Process / Item Type,Default SLA,Trigger Condition,Escalation Level,Escalation Owner,Recommended Action,Email Template,RAG Logic
+Periodic regulatory report,Due date - 7 days,Less than 7 calendar days to due date,Level 1,Public Affairs owner,Send reminder to internal owner,Internal Reminder,Amber
+Periodic regulatory report,Due date passed,Due date < today and not submitted,Level 2,Head of Regulatory & Public Affairs,Escalate to department head and agree recovery date,Escalation Notice,Red
+Ad-hoc regulator request,Same day acknowledgement,Request from MOF/ISA marked urgent or critical,Level 2,Head of Regulatory & Public Affairs,"Confirm scope, owner and expected submission timeline",Regulator Acknowledgement,Red
+Legal / Compliance review,3 working days,Review pending more than 3 days,Level 1,Legal / Compliance focal point,Send follow-up and propose deadline,Internal Reminder,Amber
+Management approval,2 working days,CEO/EMT approval pending more than 2 days,Level 2,CEO Office / EMT secretary,Escalate through management office,Escalation Notice,Amber
+Product approval dossier,10 days before target date,No regulator feedback or open clarification,Level 1,Product + Public Affairs,Prepare follow-up note to ISA/MOF,Regulator Follow-up,Amber
+Document QC,Before submission,Any mandatory checklist item = No,Level 1,Document owner,Hold submission until QC cleared,Internal Reminder,Red
+Translation request,SLA passed,Translation not completed by due date,Level 1,Translation owner,Follow up and update expected completion date,Internal Reminder,Amber
+Regional Office monthly report,Monthly closing + 3 days,RO pack not finalized,Level 1,Public Affairs owner,"Compile metrics, risks and next-month priorities",RO Monthly Update,Amber

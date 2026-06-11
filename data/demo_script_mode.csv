@@ -1,0 +1,8 @@
+Sequence,Interview Segment,Suggested Talking Points,App Module to Show,Business Value,Time Allocation
+1,Opening,"I built this prototype to show how I would organize Regulatory & Public Affairs work around control, visibility and execution discipline.",Executive Dashboard / Daily Control Tower,Shows that the candidate understands the operational nature of the JD.,30 seconds
+2,Problem 1: deadlines,The role requires tracking periodic/ad-hoc reports and reminding internal owners before deadlines.,Regulatory Obligation Register + Regulatory Calendar,Reduces missed deadlines and late submissions.,35 seconds
+3,Problem 2: official letters,"Before documents go to MOF/ISA, format, attachments, legal review and compliance review must be controlled.",Document Quality Checklist,Reduces submission errors and rework.,35 seconds
+4,Problem 3: approvals,"Product, license, capital and agency-training approval dossiers need pipeline visibility.",Product Approval Command Center,"Shows pending approvals, bottlenecks and expected follow-up actions.",35 seconds
+5,Problem 4: regulators,"Regulator interactions must be tracked as institutional memory, not only personal relationships.",Regulator CRM + Meeting Intelligence,Preserves knowledge and improves meeting preparation.,35 seconds
+6,Problem 5: Regional Office,"Regional Office needs concise and regular updates on developments, risks and approvals.",One-click Monthly RO Report,Creates management-ready reporting quickly.,35 seconds
+7,Closing,"Excel is the master tracker; Streamlit is the automation, dashboard and executive reporting layer.",Excel + Streamlit Integration,Makes the tool practical and scalable.,20 seconds

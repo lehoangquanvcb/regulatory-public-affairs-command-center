@@ -1,0 +1,5 @@
+﻿Version,Inheritance Principle,New Modules Added,Purpose,Status,Date,Notes
+v3,Operational JD-fit model,Daily Control Tower; Document QC; Interview Demo Mode,Make daily work visible and demo-friendly,Inherited,2026-06-11,Baseline operational model.
+v4,v3 + strategic intelligence,Regulator CRM; Knowledge Base; Workflow Engine; Executive Brief; Approval Analytics; PA Scorecard; Risk Radar,Add institutional memory and executive reporting,Inherited,2026-06-11,Inherited rather than rebuilt.
+v5,v4 + JD execution depth,Obligation Register; Response Tracker; Product Approval Command Center; Internal Coordination; Meeting Intelligence; Inspection Readiness; News Feed; Management Attention Today,Fit Manulife Regulatory & Public Affairs JD,Inherited,2026-06-11,Current core version.
+v6,v5 + polished interview/operating layer,Interview Story Mode; Data Dictionary/User Guide; Monthly RO Report Generator; Version Change Log,"Improve handover, demo narrative and Regional Office reporting",New,2026-06-11,No previous sheets removed.

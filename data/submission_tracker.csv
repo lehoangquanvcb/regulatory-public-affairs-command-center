@@ -1,0 +1,61 @@
+﻿Submission ID,Document / Request,Regulator,Submission Type,Owner Dept,Received Date,Submission Due Date,Submitted Date,Status,Lead Time Days,Checklist Complete,Risk Level,Next Action
+SUB-001,License/Transaction - item 1,MOF,Agency Training,Finance,2026-05-15,2026-06-10,,In Review,,Partial,Low,Follow-up / quality review
+SUB-002,License/Transaction - item 2,SBV,Report,Bancassurance,2026-05-10,2026-05-20,2026-05-18,Submitted,,Yes,High,Follow-up / quality review
+SUB-003,New Product Approval - item 3,MOF,Report,Bancassurance,2026-06-06,2026-07-06,,In Review,,Yes,Low,Follow-up / quality review
+SUB-004,Report - item 4,IAV,Report,Product,2026-04-08,2026-04-25,2026-04-22,Approved,,Partial,Low,Follow-up / quality review
+SUB-005,Agency Training - item 5,MIC,New Product Approval,Product,2026-04-03,2026-04-16,2026-04-13,Approved,,Yes,Low,Follow-up / quality review
+SUB-006,Report - item 6,ISA,Ad-hoc Response,Operations,2026-04-08,2026-04-15,2026-04-15,Approved,,Partial,High,Follow-up / quality review
+SUB-007,Agency Training - item 7,IAV,Agency Training,Legal,2026-04-22,2026-05-09,2026-05-06,Submitted,,Partial,Low,Follow-up / quality review
+SUB-008,Ad-hoc Response - item 8,IAV,Official Letter,Agency,2026-05-27,2026-06-22,2026-06-20,Approved,,No,High,Follow-up / quality review
+SUB-009,License/Transaction - item 9,IAV,Agency Training,Finance,2026-04-13,2026-04-18,,Overdue,,Partial,High,Follow-up / quality review
+SUB-010,Report - item 10,IAV,Ad-hoc Response,Finance,2026-03-22,2026-04-05,2026-04-04,Approved,,Partial,Low,Follow-up / quality review
+SUB-011,Official Letter - item 11,MOF,New Product Approval,Agency,2026-06-10,2026-07-04,,In Review,,Yes,High,Follow-up / quality review
+SUB-012,Official Letter - item 12,MIC,Ad-hoc Response,Compliance,2026-05-11,2026-06-03,,Overdue,,Partial,High,Follow-up / quality review
+SUB-013,New Product Approval - item 13,SBV,Ad-hoc Response,Operations,2026-05-25,2026-06-20,2026-06-19,Submitted,,Yes,Low,Follow-up / quality review
+SUB-014,Capital Injection - item 14,IAV,Capital Injection,CEO Office,2026-03-06,2026-04-03,2026-04-01,Approved,,Yes,High,Follow-up / quality review
+SUB-015,Agency Training - item 15,SBV,Report,Product,2026-05-13,2026-05-20,,In Review,,Yes,High,Follow-up / quality review
+SUB-016,Official Letter - item 16,MOF,Ad-hoc Response,Bancassurance,2026-03-12,2026-04-06,,Drafting,,Yes,Low,Follow-up / quality review
+SUB-017,Agency Training - item 17,ISA,License/Transaction,CEO Office,2026-05-11,2026-05-24,2026-05-23,Approved,,Yes,Medium,Follow-up / quality review
+SUB-018,License/Transaction - item 18,MIC,New Product Approval,Operations,2026-04-19,2026-04-30,,Drafting,,No,Medium,Follow-up / quality review
+SUB-019,Official Letter - item 19,MIC,License/Transaction,Bancassurance,2026-03-09,2026-03-15,2026-03-15,Approved,,Yes,High,Follow-up / quality review
+SUB-020,Capital Injection - item 20,ISA,New Product Approval,CEO Office,2026-05-17,2026-05-28,2026-05-27,Submitted,,Yes,High,Follow-up / quality review
+SUB-021,Official Letter - item 21,SBV,Ad-hoc Response,Legal,2026-04-15,2026-05-15,2026-05-15,Approved,,Yes,High,Follow-up / quality review
+SUB-022,Ad-hoc Response - item 22,MIC,Official Letter,Finance,2026-05-20,2026-06-07,2026-06-06,Submitted,,No,High,Follow-up / quality review
+SUB-023,Ad-hoc Response - item 23,MIC,New Product Approval,Operations,2026-04-22,2026-05-05,,Overdue,,Partial,Low,Follow-up / quality review
+SUB-024,Report - item 24,IAV,Report,Legal,2026-03-31,2026-04-26,2026-04-25,Approved,,Partial,Low,Follow-up / quality review
+SUB-025,Official Letter - item 25,SBV,Capital Injection,Finance,2026-04-02,2026-04-08,2026-04-08,Approved,,Yes,Low,Follow-up / quality review
+SUB-026,Official Letter - item 26,ISA,Capital Injection,Compliance,2026-05-31,2026-06-10,,Drafting,,Partial,High,Follow-up / quality review
+SUB-027,Official Letter - item 27,MIC,License/Transaction,Bancassurance,2026-03-28,2026-04-21,,Drafting,,No,High,Follow-up / quality review
+SUB-028,New Product Approval - item 28,MIC,Report,Agency,2026-03-17,2026-04-13,,In Review,,No,Medium,Follow-up / quality review
+SUB-029,Agency Training - item 29,SBV,Official Letter,Compliance,2026-03-06,2026-03-13,,Drafting,,Partial,High,Follow-up / quality review
+SUB-030,New Product Approval - item 30,MOF,Report,Bancassurance,2026-04-07,2026-04-20,,Waiting Internal Input,,No,High,Follow-up / quality review
+SUB-031,License/Transaction - item 31,SBV,New Product Approval,Compliance,2026-04-15,2026-05-07,2026-05-07,Approved,,Yes,Medium,Follow-up / quality review
+SUB-032,New Product Approval - item 32,IAV,Agency Training,Product,2026-05-27,2026-06-04,2026-06-03,Approved,,Partial,Medium,Follow-up / quality review
+SUB-033,Agency Training - item 33,MIC,New Product Approval,Legal,2026-05-15,2026-06-10,2026-06-08,Submitted,,Yes,Low,Follow-up / quality review
+SUB-034,New Product Approval - item 34,ISA,License/Transaction,Agency,2026-04-17,2026-04-30,,Drafting,,Yes,Low,Follow-up / quality review
+SUB-035,Official Letter - item 35,MOF,License/Transaction,Finance,2026-04-15,2026-05-07,2026-05-07,Approved,,Partial,High,Follow-up / quality review
+SUB-036,Report - item 36,MOF,New Product Approval,Bancassurance,2026-04-24,2026-05-17,2026-05-14,Submitted,,Yes,Medium,Follow-up / quality review
+SUB-037,Official Letter - item 37,IAV,Ad-hoc Response,Operations,2026-05-15,2026-06-10,,In Review,,Partial,Low,Follow-up / quality review
+SUB-038,Capital Injection - item 38,MOF,Report,Bancassurance,2026-05-22,2026-06-03,2026-06-02,Approved,,No,Low,Follow-up / quality review
+SUB-039,Report - item 39,MOF,Capital Injection,Legal,2026-03-08,2026-04-07,,In Review,,No,High,Follow-up / quality review
+SUB-040,Ad-hoc Response - item 40,ISA,Report,Legal,2026-05-16,2026-06-04,,In Review,,Partial,High,Follow-up / quality review
+SUB-041,Official Letter - item 41,IAV,New Product Approval,Operations,2026-04-20,2026-05-05,,In Review,,Partial,Low,Follow-up / quality review
+SUB-042,New Product Approval - item 42,ISA,Agency Training,Agency,2026-04-29,2026-05-04,,Drafting,,Yes,High,Follow-up / quality review
+SUB-043,Ad-hoc Response - item 43,IAV,Capital Injection,Compliance,2026-03-26,2026-04-13,,In Review,,No,Low,Follow-up / quality review
+SUB-044,Capital Injection - item 44,MOF,Agency Training,Product,2026-05-17,2026-05-30,,Drafting,,No,Medium,Follow-up / quality review
+SUB-045,Agency Training - item 45,IAV,License/Transaction,Compliance,2026-06-02,2026-06-28,,Overdue,,Partial,Medium,Follow-up / quality review
+SUB-046,Capital Injection - item 46,IAV,Agency Training,Finance,2026-04-07,2026-04-21,2026-04-19,Approved,,Yes,Medium,Follow-up / quality review
+SUB-047,Agency Training - item 47,SBV,New Product Approval,Operations,2026-03-17,2026-04-03,2026-04-02,Approved,,Partial,High,Follow-up / quality review
+SUB-048,Ad-hoc Response - item 48,SBV,Agency Training,Bancassurance,2026-05-03,2026-05-17,,Waiting Internal Input,,No,Medium,Follow-up / quality review
+SUB-049,Capital Injection - item 49,ISA,License/Transaction,Compliance,2026-04-15,2026-05-11,,Waiting Internal Input,,No,Low,Follow-up / quality review
+SUB-050,Ad-hoc Response - item 50,ISA,License/Transaction,Agency,2026-03-18,2026-04-12,2026-04-12,Submitted,,Yes,High,Follow-up / quality review
+SUB-051,Capital Injection - item 51,SBV,Ad-hoc Response,Compliance,2026-05-23,2026-05-28,,Drafting,,No,Medium,Follow-up / quality review
+SUB-052,License/Transaction - item 52,MIC,Capital Injection,Operations,2026-03-22,2026-04-14,,Waiting Internal Input,,Yes,High,Follow-up / quality review
+SUB-053,Ad-hoc Response - item 53,MOF,Ad-hoc Response,Operations,2026-03-19,2026-04-15,,Drafting,,Yes,High,Follow-up / quality review
+SUB-054,Ad-hoc Response - item 54,MOF,Capital Injection,Finance,2026-03-13,2026-04-03,2026-04-02,Submitted,,No,Low,Follow-up / quality review
+SUB-055,Agency Training - item 55,SBV,Capital Injection,CEO Office,2026-04-04,2026-04-26,2026-04-23,Submitted,,Yes,Low,Follow-up / quality review
+SUB-056,Report - item 56,IAV,Ad-hoc Response,CEO Office,2026-04-11,2026-04-30,,In Review,,Partial,High,Follow-up / quality review
+SUB-057,New Product Approval - item 57,ISA,New Product Approval,Bancassurance,2026-05-06,2026-05-25,,Drafting,,No,Low,Follow-up / quality review
+SUB-058,Capital Injection - item 58,ISA,License/Transaction,Product,2026-05-31,2026-06-09,,Waiting Internal Input,,Yes,Medium,Follow-up / quality review
+SUB-059,Official Letter - item 59,ISA,Ad-hoc Response,Operations,2026-04-19,2026-05-04,2026-05-01,Submitted,,No,Low,Follow-up / quality review
+SUB-060,Capital Injection - item 60,MOF,New Product Approval,Agency,2026-03-13,2026-03-18,2026-03-15,Approved,,No,Medium,Follow-up / quality review

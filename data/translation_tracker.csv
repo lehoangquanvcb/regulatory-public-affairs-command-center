@@ -1,0 +1,21 @@
+﻿Document ID,Document Name,Direction,Owner,Received Date,Due Date,Status,SLA Days,Notes
+TR-001,Circular summary 1,VN -> EN,Legal,2026-06-09,2026-06-10,Not Started,,Sample
+TR-002,Official letter 2,VN -> EN,Compliance,2026-05-31,2026-06-07,Done,,Sample
+TR-003,Meeting note 3,EN -> VN,Compliance,2026-06-08,2026-06-12,Not Started,,Sample
+TR-004,Meeting note 4,EN -> VN,Public Affairs,2026-06-02,2026-06-07,In Progress,,Sample
+TR-005,Regional report 5,VN -> EN,Public Affairs,2026-06-07,2026-06-13,Done,,Sample
+TR-006,Circular summary 6,EN -> VN,Compliance,2026-05-25,2026-05-28,In Progress,,Sample
+TR-007,Product dossier 7,VN -> EN,Compliance,2026-05-29,2026-06-05,Done,,Sample
+TR-008,Meeting note 8,EN -> VN,Legal,2026-06-11,2026-06-13,Done,,Sample
+TR-009,Official letter 9,EN -> VN,Public Affairs,2026-06-11,2026-06-13,In Progress,,Sample
+TR-010,Circular summary 10,VN -> EN,Legal,2026-05-22,2026-05-23,Overdue,,Sample
+TR-011,Official letter 11,EN -> VN,Legal,2026-05-28,2026-05-31,Done,,Sample
+TR-012,Circular summary 12,VN -> EN,Public Affairs,2026-05-24,2026-05-29,In Progress,,Sample
+TR-013,Circular summary 13,EN -> VN,Legal,2026-05-23,2026-05-24,Overdue,,Sample
+TR-014,Regional report 14,EN -> VN,Legal,2026-05-27,2026-06-01,In Progress,,Sample
+TR-015,Meeting note 15,EN -> VN,Public Affairs,2026-05-26,2026-05-27,Done,,Sample
+TR-016,Product dossier 16,EN -> VN,Public Affairs,2026-05-24,2026-05-28,In Progress,,Sample
+TR-017,Circular summary 17,VN -> EN,Public Affairs,2026-05-30,2026-06-04,Done,,Sample
+TR-018,Official letter 18,EN -> VN,Legal,2026-06-05,2026-06-12,Done,,Sample
+TR-019,Regional report 19,EN -> VN,Public Affairs,2026-06-08,2026-06-09,In Progress,,Sample
+TR-020,Official letter 20,EN -> VN,Public Affairs,2026-05-30,2026-06-04,Overdue,,Sample

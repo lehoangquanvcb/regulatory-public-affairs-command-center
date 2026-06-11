@@ -1,0 +1,8 @@
+﻿KPI Area,Metric,Target,Current,Gap,RAG Status,Interpretation,Owner
+Regulatory Reporting,On-time submission rate,0.98,0.92,0.06,Amber,Operational discipline is improving but not yet target level,Public Affairs
+Document Control,Documents ready before deadline,0.95,0.78,0.17,Red,Document quality checklist should be enforced earlier,Public Affairs + Legal
+Regulator Relationship,Average relationship strength,4.0,3.33,0.67,Amber,MOF/IAV strong; MIC and ISA require further technical engagement,Head of PA
+Policy Intelligence,High-risk policy items with action plan,1.0,0.9,0.1,Amber,"Most risks have actions, but owners should be confirmed",Public Affairs
+Approval Management,Approvals closed within target SLA,0.9,0.72,0.18,Red,Internal review and Q&A response are main bottlenecks,Product + Legal
+Regional Reporting,Regional reports issued on schedule,1.0,1.0,0.0,Green,Reporting discipline meets expectation,Public Affairs
+Translation Support,Translation tasks on-time,0.95,0.85,0.1,Amber,Track SLA for Regional Office documents,Public Affairs

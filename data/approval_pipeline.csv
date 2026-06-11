@@ -1,0 +1,26 @@
+﻿Approval ID,Approval Item,Category,Regulator,Business Owner,Current Stage,Request Date,Target Approval Date,Days in Pipeline,Probability of Approval (%),Business Impact,Blocker,Next Action
+APR-001,Health Rider Update 1,License,MOF,Agency,Approved,2026-03-30,2026-06-27,,72,Medium,None,Prepare response / follow up
+APR-002,Agency Training Program 2,Distribution,MOF,Bancassurance,Regulator Q&A,2026-04-18,2026-06-20,,53,Low,Internal sign-off,Prepare response / follow up
+APR-003,License Amendment 3,Product,MOF,Bancassurance,Regulator Q&A,2026-06-03,2026-08-12,,53,Medium,Awaiting legal memo,Prepare response / follow up
+APR-004,Health Rider Update 4,License,ISA,Agency,Submitted to Regulator,2026-05-31,2026-07-23,,93,Medium,Missing attachment,Prepare response / follow up
+APR-005,New UL Product 5,License,MOF,CEO Office,Compliance Review,2026-03-02,2026-05-14,,48,Medium,Awaiting legal memo,Prepare response / follow up
+APR-006,License Amendment 6,Product,MOF,Finance,Approved,2026-03-15,2026-04-12,,57,High,Internal sign-off,Prepare response / follow up
+APR-007,License Amendment 7,Product,MOF,Bancassurance,Legal Review,2026-05-18,2026-07-07,,89,Medium,Missing attachment,Prepare response / follow up
+APR-008,Health Rider Update 8,Agency,MOF,CEO Office,Approved,2026-05-16,2026-06-19,,46,Medium,Internal sign-off,Prepare response / follow up
+APR-009,License Amendment 9,Capital,MOF,CEO Office,Submitted to Regulator,2026-03-12,2026-05-19,,89,Low,Awaiting legal memo,Prepare response / follow up
+APR-010,Bancassurance Campaign 10,Product,MOF,Agency,Approved,2026-05-24,2026-07-21,,79,Medium,Missing attachment,Prepare response / follow up
+APR-011,New UL Product 11,License,ISA,Product,Regulator Q&A,2026-05-29,2026-08-21,,72,Medium,Regulator Q&A,Prepare response / follow up
+APR-012,License Amendment 12,Transaction,ISA,CEO Office,Submitted to Regulator,2026-03-08,2026-04-16,,79,Medium,Regulator Q&A,Prepare response / follow up
+APR-013,Health Rider Update 13,Product,ISA,Bancassurance,Compliance Review,2026-04-12,2026-06-05,,60,Medium,Internal sign-off,Prepare response / follow up
+APR-014,Agency Training Program 14,Agency,MOF,Bancassurance,Compliance Review,2026-03-20,2026-05-27,,58,Medium,Missing attachment,Prepare response / follow up
+APR-015,License Amendment 15,Agency,MOF,CEO Office,Approved,2026-04-24,2026-06-18,,57,High,Awaiting legal memo,Prepare response / follow up
+APR-016,Health Rider Update 16,Distribution,ISA,Bancassurance,Submitted to Regulator,2026-03-06,2026-05-17,,73,High,None,Prepare response / follow up
+APR-017,Health Rider Update 17,Agency,ISA,Bancassurance,Submitted to Regulator,2026-04-30,2026-06-17,,80,Low,Missing attachment,Prepare response / follow up
+APR-018,License Amendment 18,License,ISA,Agency,Compliance Review,2026-04-13,2026-07-12,,61,High,None,Prepare response / follow up
+APR-019,License Amendment 19,Transaction,MOF,Finance,Compliance Review,2026-03-06,2026-04-19,,58,Low,Regulator Q&A,Prepare response / follow up
+APR-020,New UL Product 20,Capital,ISA,Finance,Regulator Q&A,2026-05-02,2026-07-28,,68,High,Missing attachment,Prepare response / follow up
+APR-021,New UL Product 21,Product,ISA,Finance,Legal Review,2026-06-05,2026-09-01,,85,Medium,None,Prepare response / follow up
+APR-022,Agency Training Program 22,License,ISA,Agency,Regulator Q&A,2026-02-15,2026-03-08,,56,High,Missing attachment,Prepare response / follow up
+APR-023,New UL Product 23,License,ISA,Product,Legal Review,2026-02-16,2026-05-08,,81,Low,None,Prepare response / follow up
+APR-024,Capital Injection 24,Product,MOF,Product,Approved,2026-05-18,2026-06-26,,80,Medium,Internal sign-off,Prepare response / follow up
+APR-025,Agency Training Program 25,License,ISA,Agency,Approved,2026-03-22,2026-05-09,,82,Medium,Missing attachment,Prepare response / follow up

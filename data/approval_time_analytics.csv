@@ -1,0 +1,6 @@
+﻿Regulator,Approval Type,No. of Cases,Avg Days to Approval,Median Days,Longest Open Case,Expected Approval Time Next Case,Bottleneck,Recommended Improvement
+ISA,Product approval,12,42,38,APR-011,45,Regulator Q&A and missing technical evidence,Create standardized Q&A evidence pack and pre-check with Compliance
+MOF,Capital / license,8,55,52,APR-005,58,Management approval and hard-copy documentation,Prepare signature matrix and document QC before internal approval
+IAV,Industry working group input,6,21,18,APR-014,24,Coordination with member companies,Submit early draft positions and align through working group
+MIC,Digital / data consultation,5,36,34,APR-019,40,Technical interpretation and data mapping,Maintain data-flow annex and privacy impact summary
+SBV / MOF,Bancassurance matters,7,48,46,APR-018,50,Cross-agency alignment and conduct evidence,Prepare customer-protection narrative and complaint KPIs
