@@ -202,10 +202,39 @@ def add_workflow_metrics(df):
     return df
 
 def add_risk_radar_metrics(df):
-    df = ensure_columns(df, ["Regulatory Topic", "Probability (1-5)", "Impact (1-5)", "Preparedness (1-5)", "Risk Level"])
+    df = df.copy()
+
+    # Backward-compatible column aliases for older Excel sheets.
+    alias_map = {
+        "Topic": "Regulatory Topic",
+        "Regulatory Risk": "Regulatory Topic",
+        "Probability": "Probability (1-5)",
+        "Likelihood": "Probability (1-5)",
+        "Likelihood (1-5)": "Probability (1-5)",
+        "Impact": "Impact (1-5)",
+        "Business Impact": "Impact (1-5)",
+        "Preparedness": "Preparedness (1-5)",
+        "Readiness": "Preparedness (1-5)",
+        "Risk Level": "Calculated Risk Level",
+    }
+    rename = {k: v for k, v in alias_map.items() if k in df.columns and v not in df.columns}
+    if rename:
+        df = df.rename(columns=rename)
+
+    df = ensure_columns(df, ["Regulatory Topic", "Probability (1-5)", "Impact (1-5)", "Preparedness (1-5)", "Calculated Risk Level"])
     df = safe_to_numeric(df, ["Probability (1-5)", "Impact (1-5)", "Preparedness (1-5)"])
-    df["Risk Score"] = safe_divide(df["Probability (1-5)"] * df["Impact (1-5)"], df["Preparedness (1-5)"]).round(2)
-    df["Calculated Risk Level"] = pd.cut(df["Risk Score"], bins=[-1,3,6,999], labels=["Low","Medium","High"])
+
+    # Plotly cannot use NaN or non-positive values for marker size. Use neutral defaults.
+    df["Probability (1-5)"] = df["Probability (1-5)"].fillna(0)
+    df["Impact (1-5)"] = df["Impact (1-5)"].fillna(0)
+    df["Preparedness (1-5)"] = df["Preparedness (1-5)"].fillna(1).replace(0, 1)
+
+    df["Risk Score"] = (df["Probability (1-5)"] * df["Impact (1-5)"] / df["Preparedness (1-5)"]).round(2)
+
+    calculated = pd.cut(df["Risk Score"], bins=[-1, 3, 6, 999], labels=["Low", "Medium", "High"])
+    df["Calculated Risk Level"] = df["Calculated Risk Level"].astype(str)
+    df.loc[df["Calculated Risk Level"].isin(["", "nan", "<NA>", "None"]), "Calculated Risk Level"] = calculated.astype(str)
+    df["Calculated Risk Level"] = df["Calculated Risk Level"].replace({"nan": "Low", "<NA>": "Low"})
     return df
 
 def add_scorecard_metrics(df):
@@ -337,7 +366,9 @@ def add_news_feed_metrics(df):
     df = ensure_columns(df, ["Date", "Probability (1-5)", "Impact (1-5)", "Status", "Auto Tag", "Headline / Signal"])
     df = parse_dates(df, ["Date"])
     df = safe_to_numeric(df, ["Probability (1-5)", "Impact (1-5)"])
-    df["Signal Score"] = df["Probability (1-5)"] * df["Impact (1-5)"]
+    df["Probability (1-5)"] = df["Probability (1-5)"].fillna(0)
+    df["Impact (1-5)"] = df["Impact (1-5)"].fillna(0)
+    df["Signal Score"] = (df["Probability (1-5)"] * df["Impact (1-5)"]).fillna(0)
     df["Signal Level"] = pd.cut(df["Signal Score"], bins=[-1,8,15,999], labels=["Low","Medium","High"])
     return df
 

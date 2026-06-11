@@ -26,22 +26,62 @@ DATA_DIR = Path(__file__).parent / "data"
 def read_source(csv_name, excel_file=None, sheet_name=None):
     """Read from uploaded Excel master if available; otherwise use default CSV.
 
-    Important fix:
-    Streamlit's uploaded file object is reused many times while loading sheets.
-    We reset the pointer before every pd.read_excel call. If a sheet is missing
-    or an older Excel template has a different structure, the app falls back to
-    the default demo CSV instead of stopping.
+    Robust Excel parser:
+    - Streamlit uploaded files are reused many times, so seek(0) before each read.
+    - Some Excel sheets contain title rows above the real header.
+    - We compare headers from rows 0..7 with the default CSV columns and use the best match.
+    - If no usable match is found, fall back to the default CSV.
     """
+    csv_path = DATA_DIR / csv_name
+    try:
+        default_df = load_csv(csv_path)
+        expected_cols = [str(c).strip() for c in default_df.columns]
+    except Exception:
+        default_df = pd.DataFrame()
+        expected_cols = []
+
     if excel_file is not None and sheet_name is not None:
-        try:
-            excel_file.seek(0)
-            return pd.read_excel(excel_file, sheet_name=sheet_name)
-        except Exception:
+        best_df = None
+        best_score = -1
+
+        for header_row in range(0, 8):
             try:
                 excel_file.seek(0)
+                candidate = pd.read_excel(excel_file, sheet_name=sheet_name, header=header_row)
+                candidate = candidate.dropna(how="all")
+                candidate.columns = [str(c).strip() for c in candidate.columns]
+
+                # Remove fully empty / unnamed-only columns where possible.
+                candidate = candidate.loc[:, ~candidate.columns.astype(str).str.match(r"^Unnamed")]
+
+                if candidate.empty and len(candidate.columns) == 0:
+                    continue
+
+                score = len(set(candidate.columns).intersection(expected_cols))
+
+                # Bonus: prefer sheets that expose common operational columns.
+                common_markers = {
+                    "Due Date", "Status", "Regulator", "Risk Score",
+                    "Probability (1-5)", "Impact (1-5)", "Regulatory Topic",
+                    "Policy / Regulation", "Current Stage", "Next Due Date"
+                }
+                score += len(set(candidate.columns).intersection(common_markers)) * 0.1
+
+                if score > best_score:
+                    best_score = score
+                    best_df = candidate
+
             except Exception:
-                pass
-    return load_csv(DATA_DIR / csv_name)
+                try:
+                    excel_file.seek(0)
+                except Exception:
+                    pass
+                continue
+
+        if best_df is not None and best_score > 0:
+            return best_df
+
+    return default_df
 
 def load_all_data(excel_file=None):
     calendar = add_calendar_metrics(read_source("regulatory_calendar.csv", excel_file, "Regulatory_Calendar"))
@@ -300,8 +340,40 @@ with tabs[11]:
     ew = policies[["Policy / Regulation","Agency","Policy Stage","Expected Timeline","Probability (%)","Business Impact (1-5)","Reputation Impact (1-5)","Risk Score","Risk Level","Recommended Action"]].sort_values("Risk Score", ascending=False)
     st.dataframe(ew, use_container_width=True)
     st.subheader("v4 Risk Radar")
-    st.dataframe(risk_radar.sort_values("Risk Score", ascending=False), use_container_width=True)
-    st.plotly_chart(px.scatter(risk_radar, x="Probability (1-5)", y="Impact (1-5)", size="Risk Score", color="Calculated Risk Level", hover_name="Regulatory Topic", title="Regulatory Risk Radar"), use_container_width=True)
+    if "Risk Score" in risk_radar.columns:
+        st.dataframe(risk_radar.sort_values("Risk Score", ascending=False), use_container_width=True)
+    else:
+        st.dataframe(risk_radar, use_container_width=True)
+
+    required_radar_cols = ["Probability (1-5)", "Impact (1-5)", "Risk Score", "Calculated Risk Level", "Regulatory Topic"]
+    missing_radar_cols = [c for c in required_radar_cols if c not in risk_radar.columns]
+
+    if missing_radar_cols:
+        st.warning(f"Risk Radar chart skipped. Missing columns: {missing_radar_cols}")
+    else:
+        radar_plot = risk_radar.copy()
+        for col in ["Probability (1-5)", "Impact (1-5)", "Risk Score"]:
+            radar_plot[col] = pd.to_numeric(radar_plot[col], errors="coerce")
+        radar_plot = radar_plot.dropna(subset=["Probability (1-5)", "Impact (1-5)"])
+        radar_plot["Risk Score"] = radar_plot["Risk Score"].fillna(0.1).clip(lower=0.1)
+        radar_plot["Calculated Risk Level"] = radar_plot["Calculated Risk Level"].astype(str).replace({"nan": "Unclassified", "<NA>": "Unclassified"})
+        radar_plot["Regulatory Topic"] = radar_plot["Regulatory Topic"].astype(str)
+
+        if radar_plot.empty:
+            st.warning("Risk Radar chart skipped because there are no valid probability/impact rows.")
+        else:
+            st.plotly_chart(
+                px.scatter(
+                    radar_plot,
+                    x="Probability (1-5)",
+                    y="Impact (1-5)",
+                    size="Risk Score",
+                    color="Calculated Risk Level",
+                    hover_name="Regulatory Topic",
+                    title="Regulatory Risk Radar",
+                ),
+                use_container_width=True,
+            )
 
 with tabs[12]:
     st.title("Relationship Intelligence")
@@ -472,8 +544,16 @@ with tabs[27]:
     c2.metric("High-level signals", int((news_feed.get("Signal Level", pd.Series(dtype=str)).astype(str)=="High").sum()))
     c3.metric("Action required", int((news_feed.get("Status", pd.Series(dtype=str)).astype(str)=="Action Required").sum()))
     st.dataframe(news_feed.sort_values("Date", ascending=False), use_container_width=True)
-    if "Signal Score" in news_feed.columns:
-        st.plotly_chart(px.scatter(news_feed, x="Probability (1-5)", y="Impact (1-5)", size="Signal Score", color="Auto Tag", hover_name="Headline / Signal", title="Regulatory signal map"), use_container_width=True)
+    if "Signal Score" in news_feed.columns and all(c in news_feed.columns for c in ["Probability (1-5)", "Impact (1-5)"]):
+        nf_plot = news_feed.copy()
+        for col in ["Probability (1-5)", "Impact (1-5)", "Signal Score"]:
+            nf_plot[col] = pd.to_numeric(nf_plot[col], errors="coerce")
+        nf_plot = nf_plot.dropna(subset=["Probability (1-5)", "Impact (1-5)"])
+        nf_plot["Signal Score"] = nf_plot["Signal Score"].fillna(0.1).clip(lower=0.1)
+        if not nf_plot.empty:
+            st.plotly_chart(px.scatter(nf_plot, x="Probability (1-5)", y="Impact (1-5)", size="Signal Score", color="Auto Tag", hover_name="Headline / Signal", title="Regulatory signal map"), use_container_width=True)
+        else:
+            st.warning("Regulatory signal chart skipped because there are no valid probability/impact rows.")
 
 with tabs[28]:
     st.title("Management Attention Today")
