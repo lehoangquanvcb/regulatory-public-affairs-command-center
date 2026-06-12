@@ -27,10 +27,18 @@ from utils.model import (
 )
 
 st.set_page_config(
-    page_title="Manulife VN Regulatory & Public Affairs Command Center v8 Lean",
+    page_title="Manulife Regulatory Affairs Command Center",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+st.markdown("""
+<style>
+section[data-testid="stSidebar"] {
+    width: 320px !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 DATA_DIR = Path(__file__).parent / "data"
 
@@ -173,7 +181,7 @@ def load_all_data(excel_file=None):
 
 
 st.sidebar.title("Manulife VN PA Command Center v8 Lean")
-st.sidebar.caption("JD-fit lean version: 20 dashboard tabs, duplicate v7 modules consolidated.")
+st.sidebar.caption("JD-fit lean version: 19 modules with left-side navigation.")
 st.sidebar.info("Use demo CSVs or upload the Excel v8 master tracker.")
 uploaded_excel = st.sidebar.file_uploader("Optional: upload Excel master tracker", type=["xlsx"])
 if uploaded_excel:
@@ -205,50 +213,34 @@ executive_attention = data["executive_attention"]
 email_templates = data["email_templates"]
 
 
-tabs = st.tabs([
-    "0. Interview Demo",
-    "1. Executive Dashboard",
-    "2. Daily Control Tower",
-    "3. Regulatory Calendar",
-    "4. Obligation Register",
-    "5. Submission & Response",
-    "6. Document QC",
-    "7. Product Approval",
-    "8. Workflow Engine",
-    "9. Internal Coordination",
-    "10. Regulator Interaction Log",
-    "11. Regulator CRM",
-    "12. Policy Monitoring & Risk",
-    "13. Meeting Intelligence",
-    "14. Inspection Readiness",
-    "15. Executive Brief",
-    "16. Management Attention",
-    "17. Translation Tracker",
-    "18. Knowledge Base",
-    "19. Email Templates",
-])
+menu = st.sidebar.radio(
+    "Navigation",
+    [
+        "1. Executive Dashboard",
+        "2. Daily Control Tower",
+        "3. Regulatory Calendar",
+        "4. Obligation Register",
+        "5. Submission & Response",
+        "6. Document QC",
+        "7. Product Approval",
+        "8. Workflow Engine",
+        "9. Internal Coordination",
+        "10. Regulator Interaction Log",
+        "11. Regulator CRM",
+        "12. Policy Monitoring & Risk",
+        "13. Meeting Intelligence",
+        "14. Inspection Readiness",
+        "15. Executive Brief",
+        "16. Management Attention",
+        "17. Translation Tracker",
+        "18. Knowledge Base",
+        "19. Email Templates",
+    ],
+)
 
 
-with tabs[0]:
-    st.title("Interview Demo")
-    st.markdown("""
-### 90-second demo script
 
-This v8 lean model is designed around the actual Manulife Regulatory & Public Affairs JD: regulatory reporting, document control, regulator submissions, internal coordination, approval tracking and Regional Office updates.
-
-**How I would use it in the role:**
-1. Start every morning with the **Daily Control Tower**.
-2. Check the **Regulatory Calendar** and **Obligation Register** for due and overdue items.
-3. Use **Submission & Response** plus **Document QC** before anything is sent to MOF/ISA.
-4. Track product dossiers in the **Product Approval Command Center**.
-5. Preserve institutional memory through **Regulator CRM** and **Meeting Intelligence**.
-6. Produce concise management updates through **Executive Brief** and **Management Attention**.
-
-**Closing line:** Excel creates operating discipline; Streamlit creates automation and management visibility.
-""")
-    st.success("Lean v8 removes duplicate tabs and keeps only the modules most relevant to the JD.")
-
-with tabs[1]:
+if menu == "1. Executive Dashboard":
     st.title("Executive Dashboard")
     dummy_relationships = regulator_crm.copy()
     if "Relationship Strength (1-5)" not in dummy_relationships.columns:
@@ -273,7 +265,7 @@ with tabs[1]:
         if len(readiness):
             st.plotly_chart(px.bar(readiness, x="Readiness", y="Count", title="Document Readiness"), use_container_width=True)
 
-with tabs[2]:
+elif menu == "2. Daily Control Tower":
     st.title("Daily Control Tower")
     cols = st.columns(5)
     cols[0].metric("Due today", int((daily_actions.get("Days to Due", pd.Series(dtype=float)) == 0).sum()))
@@ -283,7 +275,7 @@ with tabs[2]:
     cols[4].metric("Open follow-ups", safe_count_in(interactions, "Status", ["Open", "In Progress"]))
     st.dataframe(safe_sort(daily_actions, ["Priority", "Due Date"]), use_container_width=True)
 
-with tabs[3]:
+elif menu == "3. Regulatory Calendar":
     st.title("Regulatory Calendar")
     status_values = sorted(calendar.get("Auto Status", pd.Series(dtype=str)).dropna().astype(str).unique())
     status = st.multiselect("Filter status", status_values, default=status_values)
@@ -291,7 +283,7 @@ with tabs[3]:
     st.dataframe(safe_sort(view, ["Due Date"]), use_container_width=True)
     st.download_button("Download calendar CSV", calendar.to_csv(index=False).encode("utf-8-sig"), "regulatory_calendar_export.csv")
 
-with tabs[4]:
+elif menu == "4. Obligation Register":
     st.title("Regulatory Obligation Register")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Total obligations", len(obligations))
@@ -300,7 +292,7 @@ with tabs[4]:
     c4.metric("Due in 7 days", safe_metric_count(obligations, "RAG", "Amber"))
     st.dataframe(safe_sort(obligations, ["Next Due Date"]), use_container_width=True)
 
-with tabs[5]:
+elif menu == "5. Submission & Response":
     st.title("Submission & Response Tracker")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Pending submissions", int((~submissions.get("Status", pd.Series(dtype=str)).astype(str).isin(["Submitted", "Approved"])).sum()) if len(submissions) else 0)
@@ -312,7 +304,7 @@ with tabs[5]:
     st.subheader("Submissions")
     st.dataframe(safe_sort(submissions, ["Submission Due Date"]), use_container_width=True)
 
-with tabs[6]:
+elif menu == "6. Document QC":
     st.title("Document Quality Checklist")
     c1, c2, c3 = st.columns(3)
     c1.metric("Ready", safe_metric_count(document_qc, "Auto Readiness", "Ready"))
@@ -320,7 +312,7 @@ with tabs[6]:
     c3.metric("Not ready", safe_metric_count(document_qc, "Auto Readiness", "Not Ready"))
     st.dataframe(safe_sort(document_qc, ["Due Date"]), use_container_width=True)
 
-with tabs[7]:
+elif menu == "7. Product Approval":
     st.title("Product Approval Command Center")
     c1, c2, c3 = st.columns(3)
     c1.metric("In pipeline", int((~product_command.get("Current Stage", pd.Series(dtype=str)).astype(str).isin(["Approved", "Rejected/Withdrawn"])).sum()) if len(product_command) else 0)
@@ -331,7 +323,7 @@ with tabs[7]:
     if len(stage):
         st.plotly_chart(px.bar(stage, x="Stage", y="Count", title="Approval Stage Mix"), use_container_width=True)
 
-with tabs[8]:
+elif menu == "8. Workflow Engine":
     st.title("Workflow Engine")
     if "Workflow Name" in workflow_engine.columns and len(workflow_engine):
         wf = st.selectbox("Workflow", sorted(workflow_engine["Workflow Name"].dropna().astype(str).unique().tolist()))
@@ -342,7 +334,7 @@ with tabs[8]:
     if all(c in wv.columns for c in ["Stage", "SLA Days", "Status"]):
         st.plotly_chart(px.bar(wv, x="Stage", y="SLA Days", color="Status", title="Workflow SLA by Stage"), use_container_width=True)
 
-with tabs[9]:
+elif menu == "9. Internal Coordination":
     st.title("Internal Coordination")
     c1, c2, c3 = st.columns(3)
     c1.metric("Open items", int((~internal_coordination.get("Status", pd.Series(dtype=str)).astype(str).isin(["Done", "Closed"])).sum()) if len(internal_coordination) else 0)
@@ -350,14 +342,14 @@ with tabs[9]:
     c3.metric("Management attention", safe_count_in(internal_coordination, "Management Attention", ["Yes", "Potential"]))
     st.dataframe(safe_sort(internal_coordination, ["Due Date"]), use_container_width=True)
 
-with tabs[10]:
+elif menu == "10. Regulator Interaction Log":
     st.title("Regulator Interaction Log")
     regs = sorted(interactions.get("Regulator", pd.Series(dtype=str)).dropna().astype(str).unique().tolist())
     reg = st.selectbox("Select regulator", ["All"] + regs)
     view = interactions if reg == "All" or "Regulator" not in interactions.columns else interactions[interactions["Regulator"].astype(str) == reg]
     st.dataframe(safe_sort(view, ["Date"]), use_container_width=True)
 
-with tabs[11]:
+elif menu == "11. Regulator CRM":
     st.title("Regulator CRM")
     regs = sorted(regulator_crm.get("Regulator", pd.Series(dtype=str)).dropna().astype(str).unique().tolist())
     if regs:
@@ -381,7 +373,7 @@ with tabs[11]:
         plot["Relationship Strength (1-5)"] = plot["Relationship Strength (1-5)"].fillna(1).clip(lower=1)
         st.plotly_chart(px.scatter(plot, x="Power (1-5)", y="Interest (1-5)", size="Relationship Strength (1-5)", color="Sentiment" if "Sentiment" in plot.columns else None, hover_name="Regulator", title="Power-Interest Relationship Map"), use_container_width=True)
 
-with tabs[12]:
+elif menu == "12. Policy Monitoring & Risk":
     st.title("Policy Monitoring & Risk Radar")
     st.dataframe(safe_sort(policies, ["Risk Score"]), use_container_width=True)
     required = ["Probability (%)", "Business Impact (1-5)", "Risk Score", "Policy / Regulation"]
@@ -392,7 +384,7 @@ with tabs[12]:
         if len(plot):
             st.plotly_chart(px.scatter(plot, x="Probability (%)", y="Business Impact (1-5)", size="Risk Score", color="Risk Level" if "Risk Level" in plot.columns else None, hover_name="Policy / Regulation", title="Policy Risk Radar"), use_container_width=True)
 
-with tabs[13]:
+elif menu == "13. Meeting Intelligence":
     st.title("Meeting Intelligence")
     st.dataframe(safe_sort(meeting_intelligence, ["Date"]), use_container_width=True)
     if "Meeting ID" in meeting_intelligence.columns and len(meeting_intelligence):
@@ -419,7 +411,7 @@ with tabs[13]:
         st.markdown(brief)
         st.download_button("Download brief", brief.encode("utf-8"), "meeting_brief.md")
 
-with tabs[14]:
+elif menu == "14. Inspection Readiness":
     st.title("Inspection Readiness")
     c1, c2, c3 = st.columns(3)
     avg_score = round(float(pd.to_numeric(inspection_readiness.get("Readiness Score (0-100)", pd.Series(dtype=float)), errors="coerce").mean()), 1) if len(inspection_readiness) else 0
@@ -430,7 +422,7 @@ with tabs[14]:
     if all(c in inspection_readiness.columns for c in ["Area", "Readiness Score (0-100)", "RAG"]):
         st.plotly_chart(px.bar(inspection_readiness, x="Area", y="Readiness Score (0-100)", color="RAG", title="Inspection Readiness by Area"), use_container_width=True)
 
-with tabs[15]:
+elif menu == "15. Executive Brief":
     st.title("Executive Brief")
     brief = generate_executive_brief(calendar, submissions, approvals, policies, interactions, document_qc, None)
     st.markdown(brief)
@@ -438,28 +430,28 @@ with tabs[15]:
     st.subheader("Executive / Regional Office brief history")
     st.dataframe(executive_brief_data, use_container_width=True)
 
-with tabs[16]:
+elif menu == "16. Management Attention":
     st.title("Management Attention")
     st.dataframe(safe_sort(executive_attention, ["Priority"]), use_container_width=True)
     brief = generate_management_attention_brief(executive_attention, obligations, responses, product_command, internal_coordination, inspection_readiness)
     st.markdown(brief)
     st.download_button("Download Management Attention Brief", brief.encode("utf-8"), "management_attention_brief.md")
 
-with tabs[17]:
+elif menu == "17. Translation Tracker":
     st.title("Translation Tracker")
     st.dataframe(safe_sort(translation, ["Due Date"]), use_container_width=True)
     tc = safe_value_counts(translation, "Auto Status", "Status") if "Auto Status" in translation.columns else safe_value_counts(translation, "Status", "Status")
     if len(tc):
         st.plotly_chart(px.bar(tc, x="Status", y="Count", title="Translation Status"), use_container_width=True)
 
-with tabs[18]:
+elif menu == "18. Knowledge Base":
     st.title("Knowledge Base")
     st.caption("Demo knowledge base. Replace with Manulife's approved summaries and obligations register.")
     q = st.text_input("Ask a regulatory question or keyword", "product approval")
     st.markdown(knowledge_base_answer(knowledge_base, q))
     st.dataframe(knowledge_base, use_container_width=True)
 
-with tabs[19]:
+elif menu == "19. Email Templates":
     st.title("Email Templates")
     if "Use Case" in email_templates.columns and len(email_templates):
         use_case = st.selectbox("Select template", email_templates["Use Case"].astype(str).tolist())
