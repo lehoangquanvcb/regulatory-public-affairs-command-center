@@ -38,20 +38,31 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+/* Sidebar removed: all controls are moved to the top of the main page */
 section[data-testid="stSidebar"] {
-    width: 260px !important;
+    display: none !important;
+}
+[data-testid="collapsedControl"] {
+    display: none !important;
 }
 
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3 {
-    line-height: 1.15 !important;
+.top-command-banner {
+    margin-top: 0.2rem;
+    margin-bottom: 0.6rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: linear-gradient(90deg, rgba(14,65,116,0.95), rgba(0,167,88,0.72));
+    color: white;
 }
-
-@media (max-width: 768px) {
-    section[data-testid="stSidebar"] {
-        width: 220px !important;
-    }
+.top-command-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1.25;
+}
+.top-command-subtitle {
+    font-size: 0.92rem;
+    margin-top: 0.25rem;
+    opacity: 0.95;
 }
 
 /* Keep the horizontal tabs visible on multiple rows instead of hiding overflow behind the > arrow */
@@ -82,7 +93,7 @@ button[data-baseweb="tab"] p {
 
 /* Reduce default top spacing so the banner and wrapped tabs do not overlap */
 .block-container {
-    padding-top: 1.0rem !important;
+    padding-top: 0.5rem !important;
 }
 
 /* Clean compact navigation buttons */
@@ -122,18 +133,6 @@ div[data-testid="stHorizontalBlock"] {
     }
     [data-testid="stMetricValue"] {
         font-size: 1.15rem !important;
-    }
-}
-
-
-/* Compact sidebar: keep only controls there; main banner is shown above dashboard */
-section[data-testid="stSidebar"] .block-container {
-    padding-top: 0.8rem !important;
-}
-
-@media (max-width: 768px) {
-    section[data-testid="stSidebar"] {
-        width: 180px !important;
     }
 }
 
@@ -319,9 +318,7 @@ def plot_scatter_if_available(df: pd.DataFrame, x_col: str, y_col: str, title: s
 
 
 def chart_row():
-    # Always return two containers because chart sections unpack as c1, c2.
-    # Mobile friendliness is handled through compact navigation and responsive Plotly charts.
-    return st.columns(2)
+    return st.columns(1 if st.session_state.get("mobile_mode", False) else 2)
 
 
 @st.cache_data(show_spinner=False)
@@ -388,22 +385,28 @@ def load_all_data(excel_file=None):
     }
 
 
-st.sidebar.markdown("### Controls")
+st.markdown("""
+<div class="top-command-banner">
+    <div class="top-command-title">Manulife Regulatory and Public Affairs Command Center</div>
+    <div class="top-command-subtitle">Author: Le Hoang Quan · Regulatory Affairs · Public Affairs · Government Relations · Regulatory Intelligence</div>
+</div>
+""", unsafe_allow_html=True)
 
-mobile_mode = st.sidebar.toggle(
-    "Mobile friendly mode",
-    value=False,
-    help="Use compact dropdown navigation and tighter layout for mobile screens.",
-)
-st.session_state["mobile_mode"] = mobile_mode
-
-with st.sidebar.expander("Excel data source", expanded=False):
-    st.caption("Use demo CSVs or upload the Excel v9 master tracker.")
-    uploaded_excel = st.file_uploader("Upload Excel master tracker", type=["xlsx"])
-    if uploaded_excel:
-        st.success("Excel master uploaded. App will read matching sheets where available.")
-    else:
-        st.caption("No Excel uploaded. Using /data/*.csv demo data.")
+with st.expander("Controls and Excel data source", expanded=True):
+    ctrl_col1, ctrl_col2 = st.columns([1, 2])
+    with ctrl_col1:
+        mobile_mode = st.toggle(
+            "Mobile friendly mode",
+            value=False,
+            help="Use compact dropdown navigation and single-column chart layout for mobile screens.",
+        )
+        st.session_state["mobile_mode"] = mobile_mode
+    with ctrl_col2:
+        uploaded_excel = st.file_uploader("Upload Excel master tracker", type=["xlsx"])
+        if uploaded_excel:
+            st.success("Excel master uploaded. App will read matching sheets where available.")
+        else:
+            st.caption("No Excel uploaded. Using /data/*.csv demo data.")
 
 data = load_all_data(uploaded_excel)
 
@@ -431,25 +434,6 @@ stakeholder_intelligence = data["stakeholder_intelligence"]
 early_warning = data["early_warning"]
 public_affairs_kpi = data["public_affairs_kpi"]
 regional_reporting = data["regional_reporting"]
-
-# Compact top header moved from the sidebar to the main screen.
-st.markdown("""
-<div style="
-    margin-top: 0.2rem;
-    margin-bottom: 0.6rem;
-    padding: 0.85rem 1rem;
-    border-radius: 10px;
-    background: linear-gradient(90deg, rgba(14,65,116,0.95), rgba(0,167,88,0.72));
-    color: white;
-">
-    <div style="font-size:1.25rem; font-weight:800; line-height:1.25;">
-        Manulife Regulatory and Public Affairs Command Center
-    </div>
-    <div style="font-size:0.92rem; margin-top:0.25rem; opacity:0.95;">
-        Author: Le Hoang Quan · Regulatory Affairs · Public Affairs · Government Relations · Regulatory Intelligence
-    </div>
-</div>
-""", unsafe_allow_html=True)
 
 
 NAV_ITEMS = [
