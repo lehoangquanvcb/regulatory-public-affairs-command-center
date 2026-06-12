@@ -582,25 +582,14 @@ if "active_tab" not in st.session_state:
     st.session_state.active_tab = 0
 
 selected_tab = st.selectbox(
-    "Module",
+    "Select a module from the drop-down menu:",
     options=list(range(len(NAV_ITEMS))),
     index=int(st.session_state.active_tab),
     format_func=lambda i: NAV_ITEMS[i],
 )
 st.session_state.active_tab = int(selected_tab)
 
-with st.expander("Quick navigation buttons", expanded=False):
-    for row_start, row_size in [(0, 6), (6, 6), (12, 6), (18, 5)]:
-        row = st.columns(row_size)
-        for j, label in enumerate(NAV_LABELS[row_start:row_start + row_size]):
-            i = row_start + j
-            with row[j]:
-                if st.button(label, key=f"nav_top_{i}", type="primary" if st.session_state.active_tab == i else "secondary", use_container_width=True):
-                    st.session_state.active_tab = i
-                    st.rerun()
-
 active_tab = int(st.session_state.active_tab)
-st.caption(f"Current module: {NAV_ITEMS[active_tab]}")
 
 if active_tab == 0:
     page_title("Executive Dashboard")
