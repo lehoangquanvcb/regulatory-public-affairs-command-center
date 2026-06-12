@@ -393,7 +393,7 @@ def load_all_data(excel_file=None):
 
 st.markdown("""
 <div class="top-command-banner">
-    <div class="top-command-title"></div>
+    <div class="top-command-title">__________________________________________________________________</div>
     <div class="top-command-subtitle">Manulife Regulatory and Public Affairs Command Center - Author: Le Hoang Quan · Regulatory Affairs · Public Affairs · Government Relations · Regulatory Intelligence</div>
 </div>
 """, unsafe_allow_html=True)
