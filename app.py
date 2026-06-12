@@ -476,7 +476,7 @@ def load_all_data(excel_file=None):
 
 st.markdown("""
 <div class="top-command-banner">
-    <div class="top-command-title">_______________________________________________________________________________________</div>
+    <div class="top-command-title">____________________________________________________________________________________</div>
     <div class="top-command-subtitle">Manulife Regulatory and Public Affairs Command Center</div>
     <div class="Author: Le Hoang Quan</div>
 </div>
