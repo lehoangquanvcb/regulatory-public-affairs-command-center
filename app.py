@@ -180,8 +180,18 @@ def load_all_data(excel_file=None):
     }
 
 
-st.sidebar.title("Manulife VN PA Command Center v8 Lean")
-st.sidebar.caption("JD-fit lean version: 19 modules with left-side navigation.")
+st.sidebar.title(
+    "Manulife Regulatory and Public Affairs Command Center"
+)
+
+st.sidebar.markdown(
+    """
+**Author:** Le Hoang Quan
+
+Regulatory Affairs • Public Affairs • Government Relations • Regulatory Intelligence
+"""
+)
+
 st.sidebar.info("Use demo CSVs or upload the Excel v8 master tracker.")
 uploaded_excel = st.sidebar.file_uploader("Optional: upload Excel master tracker", type=["xlsx"])
 if uploaded_excel:
