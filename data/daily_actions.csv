@@ -1,16 +1,6 @@
-﻿Daily Work Control Tower - Manulife VN Regulatory & Public Affairs
-KPI
-Reports due this week
-Overdue regulatory items
-Pending MOF / ISA submissions
-Open regulator follow-ups
-Upcoming regulator meetings
-Documents pending QC
-Priority Action List
-Calendar
-Submission
-Meeting
-Translation
-QC
-How to use this tab
-"This tab is designed as the default daily operating screen for the role. It converts the JD into a control tower: deadlines, regulator submissions, internal follow-ups, meeting preparation and document quality control. Review it every morning; update item owners and status during the day; escalate red items before end of day."
+﻿Action,Source,Item,Regulator,Owner,Due Date,Days to Due,Status,Risk,Required Action,Escalation,Notes
+Calendar,Calendar,Monthly solvency monitoring report,ISA,Product,2026-06-12,1,Due Soon,High,Confirm source data and QA before submission,No,Prepare CEO Office note if delayed
+Submission,Submission,New product approval dossier,MOF,Legal,2026-06-14,3,In Review,Medium,Complete official letter checklist and attachments,No,Coordinate with Compliance
+Meeting,Meeting,ISA technical working session,ISA,Public Affairs,2026-06-16,5,Planned,High,Generate briefing note and talking points,No,Use meeting brief generator
+Translation,Translation,Circular summary VN to EN,Regional Office,Public Affairs,2026-06-13,2,In Progress,Medium,Finalize English version for regional pack,No,Prioritize before weekly report
+QC,QC,Official letter to MOF,MOF,Regulatory Affairs,2026-06-11,0,Needs Review,High,Verify signature authority and legal review,Yes,Escalate before 3pm
