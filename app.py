@@ -38,6 +38,16 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+button[data-baseweb="tab"]{
+    font-size:13px !important;
+    padding-left:10px !important;
+    padding-right:10px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
 /* Base enterprise dashboard styling */
 section[data-testid="stSidebar"] {
     width: 320px !important;
@@ -250,7 +260,8 @@ st.sidebar.markdown(
     """
 **Author:** Le Hoang Quan
 
-Regulatory Affairs • Public Affairs • Government Relations • Regulatory Intelligence
+Regulatory Affairs • Public Affairs  
+Government Relations • Regulatory Intelligence
 """
 )
 
@@ -348,7 +359,21 @@ NAV_ITEMS = [
     "23. Email Templates",
 ]
 
-st.info("Click below tabs to see details")
+st.markdown("""
+<div style="
+background-color:#0E4174;
+padding:12px;
+border-radius:6px;
+margin-top:10px;
+margin-bottom:10px;
+color:white;
+font-weight:bold;
+font-size:16px;
+">
+Click below tabs to see details
+</div>
+""", unsafe_allow_html=True)
+
 tabs = st.tabs(NAV_ITEMS)
 
 
