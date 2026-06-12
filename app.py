@@ -73,8 +73,9 @@ section[data-testid="stSidebar"], [data-testid="collapsedControl"] { display: no
     background: rgba(30,41,59,0.23);
     min-height: 82px;
 }
-.metric-label { font-size: clamp(0.72rem, 2.2vw, 0.88rem); color: #BFC7D5; line-height: 1.2; margin-bottom: 0.45rem; }
+.metric-label { font-size: clamp(0.72rem, 2.2vw, 0.88rem); color: #BFC7D5; line-height: 1.2; margin-bottom: 0.45rem; font-weight:700; }
 .metric-value { font-size: clamp(1.25rem, 5vw, 2rem); font-weight: 800; color: inherit; line-height: 1.1; }
+
 div[data-testid="stButton"] > button {
     min-height: 32px !important; padding: 5px 6px !important;
     font-size: 11px !important; font-weight: 700 !important;
@@ -84,6 +85,9 @@ div[data-testid="stButton"] > button {
 div[data-testid="stHorizontalBlock"] { gap: 0.45rem !important; }
 [data-testid="stDataFrame"], .js-plotly-plot { max-width: 100% !important; }
 @media (max-width: 900px) {
+    .metric-label { color: #111827 !important; opacity: 1 !important; font-size: 0.82rem !important; font-weight: 700 !important; }
+    .metric-value { color: #111827 !important; font-size: 1.9rem !important; }
+    .metric-card { background: #f3f4f6 !important; }
     .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
     .metric-card { padding: 0.62rem 0.68rem; min-height: 74px; }
 }
