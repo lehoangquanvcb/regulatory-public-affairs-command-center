@@ -38,8 +38,49 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+/* Base enterprise dashboard styling */
 section[data-testid="stSidebar"] {
     width: 320px !important;
+}
+.block-container {
+    padding-top: 1.2rem;
+    padding-bottom: 2rem;
+}
+[data-testid="stMetricValue"] {
+    font-size: 1.35rem;
+}
+
+/* Automatic responsive behavior for narrow screens */
+@media (max-width: 768px) {
+    .block-container {
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
+        padding-top: 0.8rem !important;
+    }
+    div[data-testid="stHorizontalBlock"] {
+        flex-direction: column !important;
+    }
+    div[data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        margin-bottom: 0.5rem !important;
+    }
+    [data-testid="stMetric"] {
+        padding: 0.6rem 0.75rem !important;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.15rem !important;
+    }
+    h1 {
+        font-size: 1.55rem !important;
+        line-height: 1.2 !important;
+    }
+    h2, h3 {
+        font-size: 1.15rem !important;
+    }
+    .stDataFrame {
+        overflow-x: auto !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -213,6 +254,39 @@ Regulatory Affairs • Public Affairs • Government Relations • Regulatory In
 """
 )
 
+mobile_mode = st.sidebar.toggle(
+    "Mobile friendly mode",
+    value=False,
+    help="Use a compact navigation selector and force dashboard cards/charts to stack vertically.",
+)
+
+if mobile_mode:
+    st.markdown(
+        """
+        <style>
+        /* Forced mobile layout even on small tablets or narrow browser windows */
+        div[data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+        }
+        div[data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            margin-bottom: 0.5rem !important;
+        }
+        section[data-testid="stSidebar"] {
+            width: 300px !important;
+            min-width: 300px !important;
+        }
+        .block-container {
+            padding-left: 0.7rem !important;
+            padding-right: 0.7rem !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.sidebar.success("Mobile mode is on. Use the compact dropdown below to navigate modules.")
+
 st.sidebar.info("Use demo CSVs or upload the Excel v9 master tracker.")
 uploaded_excel = st.sidebar.file_uploader("Optional: upload Excel master tracker", type=["xlsx"])
 if uploaded_excel:
@@ -248,34 +322,36 @@ public_affairs_kpi = data["public_affairs_kpi"]
 regional_reporting = data["regional_reporting"]
 
 
-menu = st.sidebar.radio(
-    "Navigation",
-    [
-        "1. Executive Dashboard",
-        "2. Daily Control Tower",
-        "3. Regulatory Calendar",
-        "4. Obligation Register",
-        "5. Submission & Response",
-        "6. Document QC",
-        "7. Product Approval",
-        "8. Workflow Engine",
-        "9. Internal Coordination",
-        "10. Regulator Interaction Log",
-        "11. Regulator CRM",
-        "12. Policy Monitoring & Risk",
-        "13. Meeting Intelligence",
-        "14. Inspection Readiness",
-        "15. Executive Brief",
-        "16. Management Attention",
-        "17. Translation Tracker",
-        "18. Knowledge Base",
-        "19. Stakeholder Intelligence",
-        "20. Regulatory Early Warning",
-        "21. Public Affairs KPI",
-        "22. Regional Reporting",
-        "23. Email Templates",
-    ],
-)
+NAV_ITEMS = [
+    "1. Executive Dashboard",
+    "2. Daily Control Tower",
+    "3. Regulatory Calendar",
+    "4. Obligation Register",
+    "5. Submission & Response",
+    "6. Document QC",
+    "7. Product Approval",
+    "8. Workflow Engine",
+    "9. Internal Coordination",
+    "10. Regulator Interaction Log",
+    "11. Regulator CRM",
+    "12. Policy Monitoring & Risk",
+    "13. Meeting Intelligence",
+    "14. Inspection Readiness",
+    "15. Executive Brief",
+    "16. Management Attention",
+    "17. Translation Tracker",
+    "18. Knowledge Base",
+    "19. Stakeholder Intelligence",
+    "20. Regulatory Early Warning",
+    "21. Public Affairs KPI",
+    "22. Regional Reporting",
+    "23. Email Templates",
+]
+
+if mobile_mode:
+    menu = st.sidebar.selectbox("Navigation", NAV_ITEMS, index=0)
+else:
+    menu = st.sidebar.radio("Navigation", NAV_ITEMS)
 
 
 
