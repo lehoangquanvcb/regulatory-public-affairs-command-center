@@ -1,11 +1,11 @@
 ﻿Workflow ID,Workflow Name,Stage,Owner,SLA Days,Status,Bottleneck,Next Action,Regulator / Audience,Control Point
-WF-001,MOF official letter submission,Request received,Public Affairs,1,Completed,None,Log request and confirm scope,MOF,Request scope confirmation
+WF-001,MOF official letter submission,Request received,Public Affairs,1,Completed,,Log request and confirm scope,MOF,Request scope confirmation
 WF-001,MOF official letter submission,Data collection,Business Owner,3,In Progress,Delayed supporting data,Escalate to Product by noon,MOF,Data completeness check
 WF-001,MOF official letter submission,Legal review,Legal,2,Pending,Awaiting draft,Send version-controlled draft,MOF,Legal sign-off
 WF-001,MOF official letter submission,Compliance review,Compliance,2,Pending,Awaiting Legal comments,Review once legal draft locked,MOF,Compliance sign-off
 WF-001,MOF official letter submission,Management approval,CEO Office,2,Not Started,Signature authority not confirmed,Confirm signer and delegation matrix,MOF,Signature authority check
 WF-001,MOF official letter submission,Submission,Public Affairs,1,Not Started,Hard copy not prepared,"Prepare cover letter, attachments and submission receipt",MOF,Submission evidence archive
 WF-001,MOF official letter submission,Response tracking,Public Affairs,5,Not Started,No response yet,Track receipt and expected feedback date,MOF,Regulator response log
-WF-002,ISA product approval dossier,Draft dossier,Product,5,Completed,None,Send to Legal/Compliance,ISA,Product dossier checklist
+WF-002,ISA product approval dossier,Draft dossier,Product,5,Completed,,Send to Legal/Compliance,ISA,Product dossier checklist
 WF-002,ISA product approval dossier,Regulator Q&A,Product + PA,7,In Progress,Technical answers incomplete,Prepare Q&A table with evidence,ISA,Q&A response quality check
 WF-003,Regional Office regulatory update,Collect weekly updates,Public Affairs,2,In Progress,Inputs from functions late,Send Friday reminder,Regional Office,One source of truth tracker

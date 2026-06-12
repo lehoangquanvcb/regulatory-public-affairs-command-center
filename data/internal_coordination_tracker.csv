@@ -1,8 +1,8 @@
-﻿Item ID,Department,Request / Input Needed,Linked Matter,Request Date,Due Date,Owner,Status,Escalation,Reminder Sent
-INT-001,Legal,Review official letter to ISA for product clarification,PROD-001,2026-06-08,2026-06-13,Legal Counsel,In Progress,No,Yes
-INT-002,Compliance,Confirm market conduct controls for bancassurance response,SBV-IN-2026-006,2026-06-06,2026-06-12,Compliance Manager,Pending,Yes,Yes
-INT-003,Finance,Provide capital adequacy figures and management sign-off,OBL-002,2026-06-10,2026-06-18,Finance Controller,Open,No,No
-INT-004,Product,Update product disclosure comparison table,PROD-001,2026-06-09,2026-06-14,Product Lead,In Progress,No,Yes
-INT-005,Customer Service,Extract complaint statistics and root-cause analysis,MOF-IN-2026-022,2026-06-07,2026-06-13,CS Manager,In Progress,No,Yes
-INT-006,IT / Data,Validate data processing inventory for MIC consultation,MIC-IN-2026-004,2026-06-05,2026-06-19,Data Privacy Officer,Open,No,No
-INT-007,Regional Office,Confirm APAC position on ESG disclosure readiness,OBL-009,2026-06-10,2026-06-25,Regional PA,Open,No,No
+﻿Item ID,Department,Request / Input Needed,Linked Matter,Request Date,Due Date,SLA Days,Owner,Status,Escalation,Days to Due,Reminder Sent,Management Attention
+INT-001,Legal,Review official letter to ISA for product clarification,PROD-001,2026-06-08,2026-06-13,5,Legal Counsel,In Progress,No,1,Yes,Potential
+INT-002,Compliance,Confirm market conduct controls for bancassurance response,SBV-IN-2026-006,2026-06-06,2026-06-12,6,Compliance Manager,Pending,Yes,0,Yes,Potential
+INT-003,Finance,Provide capital adequacy figures and management sign-off,OBL-002,2026-06-10,2026-06-18,8,Finance Controller,Open,No,6,No,No
+INT-004,Product,Update product disclosure comparison table,PROD-001,2026-06-09,2026-06-14,5,Product Lead,In Progress,No,2,Yes,Potential
+INT-005,Customer Service,Extract monthly complaint statistics and root-cause analysis,MOF-IN-2026-022,2026-06-07,2026-06-13,6,CS Manager,In Progress,No,1,Yes,Potential
+INT-006,IT / Data,Validate data processing inventory for MIC consultation,MIC-IN-2026-004,2026-06-05,2026-06-19,14,Data Privacy Officer,Open,No,7,No,No
+INT-007,Regional Office,Confirm APAC position on ESG disclosure readiness,OBL-009,2026-06-10,2026-06-25,15,Regional PA,Open,No,13,No,No

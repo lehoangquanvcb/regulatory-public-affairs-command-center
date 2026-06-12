@@ -1,7 +1,7 @@
 ﻿KPI,Target,Actual,RAG,Owner,Comment
-On-time Submissions (%),95.0,98.0,Green,Regulatory Affairs,Submission discipline above target
-Approval Turnaround Days,60.0,55.0,Green,Product + PA,Average cycle time within target
-Inspection Readiness Score,90.0,86.0,Amber,Compliance + PA,Documentation evidence needs improvement
-Stakeholder Engagement Score,4.0,4.2,Green,Public Affairs,Healthy relationship score with priority stakeholders
-Regional Office Reporting Timeliness (%),100.0,100.0,Green,Public Affairs,Monthly report submitted on schedule
-Open Action Closure Rate (%),90.0,82.0,Amber,Cross-functional owners,Need faster closure of internal action items
+On-time Submissions (%),95,98.0,Green,Regulatory Affairs,Submission discipline above target
+Approval Turnaround Days,60,55.0,Green,Product + PA,Average cycle time within target
+Inspection Readiness Score,90,86.0,Amber,Compliance + PA,Documentation evidence needs improvement
+Stakeholder Engagement Score,4,4.2,Green,Public Affairs,Healthy relationship score with priority stakeholders
+Regional Office Reporting Timeliness (%),100,100.0,Green,Public Affairs,Monthly report submitted on schedule
+Open Action Closure Rate (%),90,82.0,Amber,Cross-functional owners,Need faster closure of internal action items

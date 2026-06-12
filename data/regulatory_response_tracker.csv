@@ -1,8 +1,8 @@
-﻿Ref No,Date Received / Sent,Direction,Regulator,Topic,Linked Obligation / Submission,Internal Owner,Response Due Date,Status,Response Sent Date,Next Action,Archive Location
-ISA-IN-2026-021,2026-06-05,Incoming,ISA,Clarification on product filing dossier,OBL-003,Product / Legal,2026-06-14,Open,,Prepare Q&A and supporting product disclosure,/Regulatory/ISA/ProductA/
-MOF-OUT-2026-034,2026-06-06,Outgoing,MOF,Quarterly capital adequacy submission,OBL-002,Finance,2026-07-15,Waiting Reply,2026-06-06,Monitor acknowledgement from MOF,/Regulatory/MOF/Capital/
-MOF-IN-2026-022,2026-06-07,Incoming,MOF,Request for complaint-handling statistics,OBL-007,Customer Service,2026-06-15,In Progress,,Collect complaint SLA data and root-cause summary,/Regulatory/MOF/MarketConduct/
-SBV-IN-2026-006,2026-06-02,Incoming,SBV,Bancassurance conduct information request,OBL-008,Distribution / Compliance,2026-06-12,Open,,Align data with bank partner before response,/Regulatory/SBV/Banca/
-MIC-IN-2026-004,2026-05-28,Incoming,MIC,Data localization consultation draft,OBL-006,IT / Legal,2026-06-20,In Progress,,Submit industry feedback through IAV where appropriate,/Regulatory/MIC/Data/
-IAV-IN-2026-011,2026-06-03,Incoming,IAV,Industry working group on product transparency,OBL-003,Regulatory & PA,2026-06-13,Closed,2026-06-10,Prepare internal summary of IAV position,/Regulatory/IAV/ProductTransparency/
-ISA-OUT-2026-035,2026-06-09,Outgoing,ISA,Agent training materials registration,OBL-004,Agency,2026-06-18,Submitted,2026-06-09,Wait for receipt stamp and update archive,/Regulatory/ISA/AgentTraining/
+﻿Ref No,Date Received / Sent,Direction,Regulator,Topic,Linked Obligation / Submission,Internal Owner,Response Due Date,Status,Response Sent Date,Days Open,SLA Status,Next Action,Archive Location
+ISA-IN-2026-021,2026-06-05,Incoming,ISA,Clarification on product filing dossier,OBL-003,Product / Legal,2026-06-14,Open,,7,Due Soon,Prepare Q&A and supporting product disclosure,/Regulatory/ISA/ProductA/
+MOF-OUT-2026-034,2026-06-06,Outgoing,MOF,Quarterly capital adequacy submission,OBL-002,Finance,2026-07-15,Waiting Reply,2026-06-06,0,On Track,Monitor acknowledgement from MOF,/Regulatory/MOF/Capital/
+MOF-IN-2026-022,2026-06-07,Incoming,MOF,Request for complaint-handling statistics,OBL-007,Customer Service,2026-06-15,In Progress,,5,Due Soon,Collect complaint SLA data and root-cause summary,/Regulatory/MOF/MarketConduct/
+SBV-IN-2026-006,2026-06-02,Incoming,SBV,Bancassurance conduct information request,OBL-008,Distribution / Compliance,2026-06-12,Open,,10,Due Soon,Align data with bank partner before response,/Regulatory/SBV/Banca/
+MIC-IN-2026-004,2026-05-28,Incoming,MIC,Data localization consultation draft,OBL-006,IT / Legal,2026-06-20,In Progress,,15,On Track,Submit industry feedback through IAV where appropriate,/Regulatory/MIC/Data/
+IAV-IN-2026-011,2026-06-03,Incoming,IAV,Industry working group on product transparency,OBL-003,Regulatory & PA,2026-06-13,Closed,2026-06-10,7,On Track,Prepare internal summary of IAV position,/Regulatory/IAV/ProductTransparency/
+ISA-OUT-2026-035,2026-06-09,Outgoing,ISA,Agent training materials registration,OBL-004,Agency,2026-06-18,Submitted,2026-06-09,0,On Track,Wait for receipt stamp and update archive,/Regulatory/ISA/AgentTraining/

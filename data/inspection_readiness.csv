@@ -1,7 +1,7 @@
-﻿Area,Regulator Focus,Required Evidence,Owner,Last Review Date,Readiness Score (0-100),Gap,Remediation Action,Due Date,Status
-Regulatory reporting,Timeliness and accuracy of reports,"Submission log, signed reports, proof of receipt",Regulatory Affairs,2026-06-01,88,Some hard-copy receipts not archived,Scan and archive receipt stamps,2026-06-20,In Progress
-Product filing,Approval dossier completeness,"Product wordings, approval letters, actuarial memo",Product / Legal,2026-06-03,82,Benefit illustration Q&A pending,Finalize regulator Q&A pack,2026-06-17,In Progress
-Market conduct,Complaint handling and sales conduct,"Complaint log, training evidence, root cause analysis",Compliance / CS,2026-06-05,76,Root-cause analysis incomplete,Complete complaint trend report,2026-06-15,Open
-Bancassurance,Bank partner sales practice controls,"Partner training, scripts, monitoring evidence",Distribution / Compliance,2026-05-28,68,Bank partner data validation not complete,Escalate to partnership distribution,2026-06-12,Escalated
-Data privacy,"Consent, data flow, localization readiness","DPIA, consent logs, data map",IT / Legal,2026-06-02,74,Data flow inventory needs update,Update customer data map,2026-06-30,Open
-Governance archive,Institutional memory and traceability,"Meeting minutes, official letters, tracker refs",Regulatory Affairs,2026-06-06,90,No major gap,Maintain monthly archive review,2026-07-05,On Track
+﻿Area,Regulator Focus,Required Evidence,Owner,Last Review Date,Readiness Score (0-100),Gap,Remediation Action,Due Date,Status,RAG
+Regulatory reporting,Timeliness and accuracy of periodic reports,"Submission log, signed reports, proof of receipt",Regulatory Affairs,2026-06-01,88,Some hard-copy receipts not archived,Scan and archive receipt stamps,2026-06-20,In Progress,Green
+Product filing,Approval dossier completeness,"Product wordings, approval letters, actuarial memo",Product / Legal,2026-06-03,82,Benefit illustration Q&A pending,Finalize regulator Q&A pack,2026-06-17,In Progress,Amber
+Market conduct,Complaint handling and sales conduct,"Complaint log, training evidence, root cause analysis",Compliance / CS,2026-06-05,76,Root-cause analysis incomplete,Complete complaint trend report,2026-06-15,Open,Amber
+Bancassurance,Bank partner sales practice controls,"Partner training, scripts, monitoring evidence",Distribution / Compliance,2026-05-28,68,Bank partner data validation not complete,Escalate to partnership distribution,2026-06-12,Escalated,Red
+Data privacy,"Consent, data flow, localization readiness","DPIA, consent logs, data map",IT / Legal,2026-06-02,74,Data flow inventory needs update,Update customer data map,2026-06-30,Open,Amber
+Governance archive,Institutional memory and document traceability,"Meeting minutes, official letters, tracker references",Regulatory Affairs,2026-06-06,90,No major gap,Maintain monthly archive review,2026-07-05,On Track,Green
