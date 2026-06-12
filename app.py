@@ -73,13 +73,27 @@ button[data-baseweb="tab"] p {
     padding-top: 1.0rem !important;
 }
 
-/* Fixed two-row navigation buttons */
+/* Clean compact navigation buttons */
 div[data-testid="stButton"] > button {
-    min-height: 34px !important;
-    padding: 6px 8px !important;
+    min-height: 38px !important;
+    padding: 7px 6px !important;
     font-size: 12px !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     white-space: nowrap !important;
+    border-radius: 9px !important;
+    border: 1px solid rgba(255,255,255,0.22) !important;
+}
+
+/* Reduce vertical gap between navigation rows */
+div[data-testid="stHorizontalBlock"] {
+    gap: 0.45rem !important;
+}
+
+/* Keep nav area visually separated from content */
+.nav-subtitle {
+    color: #BFC7D5;
+    font-size: 13px;
+    margin: -4px 0 8px 2px;
 }
 
 /* Mobile mode: make metrics, charts and tables breathe */
@@ -332,6 +346,32 @@ NAV_ITEMS = [
     "23. Email Templates",
 ]
 
+NAV_LABELS = [
+    "1. Exec",
+    "2. Daily",
+    "3. Calendar",
+    "4. Oblig.",
+    "5. Submit",
+    "6. Doc QC",
+    "7. Product",
+    "8. Flow",
+    "9. Internal",
+    "10. Interact",
+    "11. CRM",
+    "12. Policy",
+    "13. Meeting",
+    "14. Inspect",
+    "15. Brief",
+    "16. Attention",
+    "17. Translate",
+    "18. KB",
+    "19. Stakeholder",
+    "20. Warning",
+    "21. KPI",
+    "22. RO Report",
+    "23. Email",
+]
+
 st.markdown("""
 <div style="
 background-color:#0E4174;
@@ -344,8 +384,9 @@ font-weight:bold;
 font-size:16px;
 line-height:1.35;
 ">
-Click below tabs to see details
+Click below buttons to see details
 </div>
+<div class="nav-subtitle">Two-row compact navigation. Full module name is shown inside each screen.</div>
 """, unsafe_allow_html=True)
 
 mobile_mode = st.sidebar.toggle(
@@ -367,8 +408,8 @@ if mobile_mode:
     )
     st.session_state.active_tab = int(selected_tab)
 else:
-    first_row = NAV_ITEMS[:12]
-    second_row = NAV_ITEMS[12:]
+    first_row = NAV_LABELS[:12]
+    second_row = NAV_LABELS[12:]
 
     row1 = st.columns(len(first_row))
     for i, label in enumerate(first_row):
@@ -396,6 +437,7 @@ else:
                 st.rerun()
 
 active_tab = int(st.session_state.active_tab)
+st.caption(f"Current module: {NAV_ITEMS[active_tab]}")
 
 if active_tab == 0:
     st.title("Executive Dashboard")
