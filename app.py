@@ -153,9 +153,9 @@ def _clean_cols(df: pd.DataFrame) -> pd.DataFrame:
 def read_source(csv_name: str, excel_file=None, sheet_name: str | None = None) -> pd.DataFrame:
     """Read uploaded Excel if available, otherwise fall back to demo CSV.
 
-    The Excel master contains visual title rows in some sheets. This reader tries
-    header rows 0..7 and chooses the one with the strongest overlap against the
-    CSV schema and common operating columns.
+    The Excel master is formatted for human use, so some sheets have title rows,
+    blank rows, KPI summaries, and section headers before the real data table.
+    This reader handles those visual sheets safely, especially Daily_Control_Tower.
     """
     csv_path = DATA_DIR / csv_name
     try:
@@ -165,21 +165,106 @@ def read_source(csv_name: str, excel_file=None, sheet_name: str | None = None) -
         default_df = pd.DataFrame()
         expected_cols = []
 
+    def _normalise_daily_control_tower(df: pd.DataFrame) -> pd.DataFrame:
+        """Extract the Priority Action List section from Daily_Control_Tower.
+
+        The sheet contains a KPI block at the top and a second section named
+        'Priority Action List'. The dashboard needs the action list, not the KPI
+        summary rows.
+        """
+        if df is None or df.empty:
+            return df
+
+        raw = df.copy()
+        raw = raw.dropna(how="all").dropna(axis=1, how="all")
+
+        header_idx = None
+        for r in range(len(raw)):
+            row_values = [str(v).strip() for v in raw.iloc[r].tolist() if pd.notna(v)]
+            row_text = " | ".join(row_values).lower()
+            if "priority action list" in row_text:
+                header_idx = r
+                break
+
+        if header_idx is None:
+            return df
+
+        header = raw.iloc[header_idx].tolist()
+        values = raw.iloc[header_idx + 1 :].copy()
+        values.columns = [str(c).replace("\n", " ").strip() for c in header]
+        values = values.dropna(how="all")
+
+        # Keep only the actual action rows. Stop before the 'How to use this tab' section.
+        first_col = values.columns[0]
+        values[first_col] = values[first_col].astype(str).str.strip()
+        stop_mask = values[first_col].str.lower().str.contains("how to use", na=False)
+        if stop_mask.any():
+            values = values.loc[: stop_mask.idxmax() - 1]
+
+        rename_map = {
+            "Priority Action List": "Action",
+            "Days Left": "Days to Due",
+            "Escalati on": "Escalation",
+            "Escalation": "Escalation",
+        }
+        values = values.rename(columns={k: v for k, v in rename_map.items() if k in values.columns})
+
+        # Standardize expected dashboard columns.
+        if "Action" not in values.columns and first_col in values.columns:
+            values = values.rename(columns={first_col: "Action"})
+        if "Item" in values.columns and "Task" not in values.columns:
+            values["Task"] = values["Item"]
+        if "Days to Due" not in values.columns and "Due Date" in values.columns:
+            values["Due Date"] = pd.to_datetime(values["Due Date"], errors="coerce")
+            values["Days to Due"] = (values["Due Date"] - pd.Timestamp.today().normalize()).dt.days
+
+        for col in ["Due Date"]:
+            if col in values.columns:
+                values[col] = pd.to_datetime(values[col], errors="coerce")
+        for col in ["Days to Due"]:
+            if col in values.columns:
+                values[col] = pd.to_numeric(values[col], errors="coerce")
+
+        # Remove rows that are not real action items.
+        if "Item" in values.columns:
+            values = values[values["Item"].notna()]
+        elif "Task" in values.columns:
+            values = values[values["Task"].notna()]
+
+        return values.reset_index(drop=True)
+
     if excel_file is not None and sheet_name is not None:
+        # Special handling for the formatted Daily Control Tower sheet.
+        if sheet_name == "Daily_Control_Tower":
+            try:
+                excel_file.seek(0)
+                raw = pd.read_excel(excel_file, sheet_name=sheet_name, header=None)
+                daily = _normalise_daily_control_tower(raw)
+                if daily is not None and not daily.empty:
+                    return daily
+            except Exception:
+                try:
+                    excel_file.seek(0)
+                except Exception:
+                    pass
+
         best_df = None
         best_score = -1
         markers = {
-            "Due Date", "Status", "Regulator", "Risk Score", "Policy / Regulation",
-            "Current Stage", "Next Due Date", "Response Due Date", "Product",
-            "Meeting ID", "Regulatory Topic", "Probability (1-5)", "Impact (1-5)",
+            "Due Date", "Status", "Priority", "Escalation", "Action", "Item", "Owner",
+            "Regulator", "Risk Score", "Policy / Regulation", "Current Stage",
+            "Next Due Date", "Response Due Date", "Product", "Meeting ID",
+            "Regulatory Topic", "Probability (1-5)", "Impact (1-5)",
             "Use Case", "Email Body Template"
         }
 
-        for header_row in range(0, 8):
+        for header_row in range(0, 15):
             try:
                 excel_file.seek(0)
                 candidate = pd.read_excel(excel_file, sheet_name=sheet_name, header=header_row)
                 candidate = _clean_cols(candidate)
+                candidate = candidate.dropna(how="all")
+                candidate = candidate.loc[:, ~candidate.columns.astype(str).str.contains("^Unnamed")]
                 if candidate.empty and len(candidate.columns) == 0:
                     continue
                 score = len(set(candidate.columns).intersection(expected_cols))
@@ -581,28 +666,49 @@ if active_tab == 0:
 
 elif active_tab == 1:
     st.title("Daily Control Tower")
+    daily_view = daily_actions.copy()
+    if "Days Left" in daily_view.columns and "Days to Due" not in daily_view.columns:
+        daily_view["Days to Due"] = pd.to_numeric(daily_view["Days Left"], errors="coerce")
+    if "Days to Due" in daily_view.columns:
+        daily_view["Days to Due"] = pd.to_numeric(daily_view["Days to Due"], errors="coerce")
+    if "Due Date" in daily_view.columns:
+        daily_view["Due Date"] = pd.to_datetime(daily_view["Due Date"], errors="coerce")
+
     cols = st.columns(5)
-    cols[0].metric("Due today", int((daily_actions.get("Days to Due", pd.Series(dtype=float)) == 0).sum()))
-    cols[1].metric("Overdue actions", int((daily_actions.get("Days to Due", pd.Series(dtype=float)) < 0).sum()))
-    cols[2].metric("Escalations", safe_metric_count(daily_actions, "Escalation", "Yes"))
-    cols[3].metric("Docs not ready", int((document_qc.get("Auto Readiness", pd.Series(dtype=str)).astype(str)!="Ready").sum()))
+    cols[0].metric("Due today", int((daily_view.get("Days to Due", pd.Series(dtype=float)) == 0).sum()))
+    cols[1].metric("Overdue actions", int((daily_view.get("Days to Due", pd.Series(dtype=float)) < 0).sum()))
+    cols[2].metric("Escalations", safe_metric_count(daily_view, "Escalation", "Yes"))
+    cols[3].metric("High-risk actions", safe_metric_count(daily_view, "Risk", "High"))
     cols[4].metric("Open follow-ups", safe_count_in(interactions, "Status", ["Open", "In Progress"]))
+
     c1, c2 = chart_row()
     with c1:
-        plot_count_bar(daily_actions, "Priority", "Daily Actions by Priority")
+        plot_count_bar(daily_view, "Risk", "Priority Actions by Risk")
     with c2:
-        plot_count_bar(daily_actions, "Escalation", "Daily Actions by Escalation")
+        plot_count_bar(daily_view, "Status", "Priority Actions by Status")
+
     c3, c4 = chart_row()
     with c3:
-        plot_count_bar(daily_actions, "Status", "Daily Actions by Status")
+        plot_horizontal_count_bar(daily_view, "Regulator", "Priority Actions by Regulator")
     with c4:
-        if "Days to Due" in daily_actions.columns:
-            tmp = daily_actions.copy()
-            tmp["Days to Due"] = pd.to_numeric(tmp["Days to Due"], errors="coerce")
-            tmp = tmp.dropna(subset=["Days to Due"])
+        plot_count_bar(daily_view, "Escalation", "Priority Actions by Escalation")
+
+    c5, c6 = chart_row()
+    with c5:
+        plot_count_bar(daily_view, "Source", "Priority Actions by Source")
+    with c6:
+        if "Days to Due" in daily_view.columns:
+            tmp = daily_view.dropna(subset=["Days to Due"]).copy()
             if len(tmp):
-                st.plotly_chart(px.histogram(tmp, x="Days to Due", nbins=12, title="Daily Actions Deadline Distribution"), use_container_width=True)
-    st.dataframe(safe_sort(daily_actions, ["Priority", "Due Date"]), use_container_width=True)
+                st.plotly_chart(
+                    px.bar(tmp, x="Item" if "Item" in tmp.columns else "Action", y="Days to Due", color="Risk" if "Risk" in tmp.columns else None, title="Days Left by Action Item"),
+                    use_container_width=True,
+                )
+
+    st.subheader("Priority Action List")
+    preferred_cols = ["Action", "Source", "Item", "Regulator", "Owner", "Due Date", "Days to Due", "Status", "Risk", "Required Action", "Escalation", "Notes"]
+    visible_cols = [c for c in preferred_cols if c in daily_view.columns]
+    st.dataframe(safe_sort(daily_view[visible_cols] if visible_cols else daily_view, ["Risk", "Due Date"]), use_container_width=True)
 
 elif active_tab == 2:
     st.title("Regulatory Calendar")
