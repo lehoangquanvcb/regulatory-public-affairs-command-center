@@ -318,7 +318,13 @@ def plot_scatter_if_available(df: pd.DataFrame, x_col: str, y_col: str, title: s
 
 
 def chart_row():
-    return st.columns(1 if st.session_state.get("mobile_mode", False) else 2)
+    """Return two chart containers consistently.
+
+Streamlit automatically stacks columns on narrow/mobile screens.
+Returning a single column caused unpacking errors in calls such as
+`c1, c2 = chart_row()` when Mobile friendly mode was enabled.
+"""
+    return st.columns(2)
 
 
 @st.cache_data(show_spinner=False)
@@ -387,8 +393,8 @@ def load_all_data(excel_file=None):
 
 st.markdown("""
 <div class="top-command-banner">
-    <div class="top-command-title">Manulife Regulatory and Public Affairs Command Center</div>
-    <div class="top-command-subtitle">Author: Le Hoang Quan · Regulatory Affairs · Public Affairs · Government Relations · Regulatory Intelligence</div>
+    <div class="top-command-title"></div>
+    <div class="top-command-subtitle">Manulife Regulatory and Public Affairs Command Center - Author: Le Hoang Quan · Regulatory Affairs · Public Affairs · Government Relations · Regulatory Intelligence</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -398,7 +404,7 @@ with st.expander("Controls and Excel data source", expanded=True):
         mobile_mode = st.toggle(
             "Mobile friendly mode",
             value=False,
-            help="Use compact dropdown navigation and single-column chart layout for mobile screens.",
+            help="Use compact dropdown navigation and responsive chart layout for mobile screens.",
         )
         st.session_state["mobile_mode"] = mobile_mode
     with ctrl_col2:
