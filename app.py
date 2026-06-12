@@ -168,84 +168,91 @@ def read_source(csv_name: str, excel_file=None, sheet_name: str | None = None) -
     def _normalise_daily_control_tower(df: pd.DataFrame) -> pd.DataFrame:
         """Extract the Priority Action List section from Daily_Control_Tower.
 
-        The sheet contains a KPI block at the top and a second section named
-        'Priority Action List'. The dashboard needs the action list, not the KPI
-        summary rows.
+        The Excel sheet is formatted for human reading and contains:
+        1) a title row,
+        2) a KPI summary block,
+        3) a Priority Action List block.
+
+        The dashboard charts need the Priority Action List block. In that block,
+        the header row starts with "Priority Action List" followed by columns
+        like Source, Item, Regulator, Owner, Due Date, Days Left, Status, Risk,
+        Required Action, Escalation and Notes. We rename the first header to
+        "Action" so the app can display it cleanly.
         """
         if df is None or df.empty:
-            return df
+            return pd.DataFrame()
 
         raw = df.copy()
         raw = raw.dropna(how="all").dropna(axis=1, how="all")
+        if raw.empty:
+            return pd.DataFrame()
 
+        # Find the header row of the action-list section.
         header_idx = None
-        for r in range(len(raw)):
-            row_values = [str(v).strip() for v in raw.iloc[r].tolist() if pd.notna(v)]
-            row_text = " | ".join(row_values).lower()
-            if "priority action list" in row_text:
-                header_idx = r
+        for idx, row in raw.iterrows():
+            values = [str(v).strip() for v in row.tolist() if pd.notna(v)]
+            values_lower = [v.lower() for v in values]
+            if any(v == "priority action list" for v in values_lower):
+                header_idx = idx
                 break
 
         if header_idx is None:
-            return df
+            # Fallback: look for a row that contains several expected headers.
+            expected = {"source", "item", "regulator", "owner", "due date", "status"}
+            for idx, row in raw.iterrows():
+                vals = {str(v).strip().lower() for v in row.tolist() if pd.notna(v)}
+                if len(vals.intersection(expected)) >= 3:
+                    header_idx = idx
+                    break
 
-        # In the formatted Excel sheet, the row containing "Priority Action List"
-        # is a section title. The real table header is the next non-empty row.
-        header_row_idx = None
-        for rr in range(header_idx + 1, min(header_idx + 8, len(raw))):
-            row_values = [str(v).strip() for v in raw.iloc[rr].tolist() if pd.notna(v)]
-            row_text = " | ".join(row_values).lower()
-            if "source" in row_text and "item" in row_text and "due date" in row_text:
-                header_row_idx = rr
-                break
+        if header_idx is None:
+            return pd.DataFrame()
 
-        if header_row_idx is None:
-            header_row_idx = header_idx + 1
+        header = raw.loc[header_idx].tolist()
+        columns = []
+        for i, value in enumerate(header):
+            col = str(value).strip() if pd.notna(value) else ""
+            if col == "" or col.lower().startswith("unnamed"):
+                col = f"Extra_{i+1}"
+            if col.lower() == "priority action list":
+                col = "Action"
+            if col.lower() == "days left":
+                col = "Days to Due"
+            columns.append(col)
 
-        header = raw.iloc[header_row_idx].tolist()
-        values = raw.iloc[header_row_idx + 1 :].copy()
-        values.columns = [str(c).replace("\n", " ").strip() for c in header]
-        values = values.dropna(how="all")
+        data = raw.loc[header_idx + 1:].copy()
+        data.columns = columns[:len(data.columns)]
+        data = data.dropna(how="all")
 
-        # Keep only the actual action rows. Stop before the 'How to use this tab' section.
-        first_col = values.columns[0]
-        values[first_col] = values[first_col].astype(str).str.strip()
-        stop_mask = values[first_col].str.lower().str.contains("how to use", na=False)
-        if stop_mask.any():
-            stop_index = stop_mask[stop_mask].index[0]
-            values = values.loc[values.index < stop_index]
+        # Stop before the instruction/footer section.
+        if "Action" in data.columns:
+            mask_footer = data["Action"].astype(str).str.strip().str.lower().isin([
+                "how to use this tab",
+                "how to use",
+            ])
+            if mask_footer.any():
+                first_footer_position = data.index[mask_footer][0]
+                data = data.loc[:first_footer_position - 1]
 
-        rename_map = {
-            "Priority Action List": "Action",
-            "Days Left": "Days to Due",
-            "Escalati on": "Escalation",
-            "Escalation": "Escalation",
-        }
-        values = values.rename(columns={k: v for k, v in rename_map.items() if k in values.columns})
+        # Remove empty helper/extra columns and rows without any meaningful item.
+        data = data.loc[:, ~data.columns.astype(str).str.startswith("Extra_")]
+        meaningful_cols = [c for c in ["Action", "Source", "Item", "Regulator", "Owner", "Due Date", "Status", "Risk", "Escalation"] if c in data.columns]
+        if meaningful_cols:
+            data = data.dropna(how="all", subset=meaningful_cols)
 
-        # Standardize expected dashboard columns.
-        if "Action" not in values.columns and first_col in values.columns:
-            values = values.rename(columns={first_col: "Action"})
-        if "Item" in values.columns and "Task" not in values.columns:
-            values["Task"] = values["Item"]
-        if "Days to Due" not in values.columns and "Due Date" in values.columns:
-            values["Due Date"] = pd.to_datetime(values["Due Date"], errors="coerce")
-            values["Days to Due"] = (values["Due Date"] - pd.Timestamp.today().normalize()).dt.days
+        # Normalise datatypes.
+        if "Due Date" in data.columns:
+            data["Due Date"] = pd.to_datetime(data["Due Date"], errors="coerce")
+        if "Days to Due" in data.columns:
+            data["Days to Due"] = pd.to_numeric(data["Days to Due"], errors="coerce")
+        elif "Due Date" in data.columns:
+            data["Days to Due"] = (data["Due Date"] - pd.Timestamp.today().normalize()).dt.days
 
-        for col in ["Due Date"]:
-            if col in values.columns:
-                values[col] = pd.to_datetime(values[col], errors="coerce")
-        for col in ["Days to Due"]:
-            if col in values.columns:
-                values[col] = pd.to_numeric(values[col], errors="coerce")
+        for col in ["Action", "Source", "Item", "Regulator", "Owner", "Status", "Risk", "Required Action", "Escalation", "Notes"]:
+            if col in data.columns:
+                data[col] = data[col].astype(object).where(data[col].notna(), "")
 
-        # Remove rows that are not real action items.
-        if "Item" in values.columns:
-            values = values[values["Item"].notna()]
-        elif "Task" in values.columns:
-            values = values[values["Task"].notna()]
-
-        return values.reset_index(drop=True)
+        return data.reset_index(drop=True)
 
     if excel_file is not None and sheet_name is not None:
         # Special handling for the formatted Daily Control Tower sheet.
