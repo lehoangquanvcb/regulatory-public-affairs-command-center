@@ -377,8 +377,8 @@ st.markdown("""
 background-color:#0E4174;
 padding:12px;
 border-radius:6px;
-margin-top:15px;
-margin-bottom:5px;
+margin-top:20px;
+margin-bottom:0px;
 color:white;
 font-weight:bold;
 font-size:16px;
