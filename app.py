@@ -372,6 +372,22 @@ NAV_LABELS = [
     "23. Email",
 ]
 
+st.markdown("""
+<div style="
+background-color:#0E4174;
+padding:12px;
+border-radius:6px;
+margin-top:10px;
+margin-bottom:10px;
+color:white;
+font-weight:bold;
+font-size:16px;
+line-height:1.35;
+">
+Click below buttons to see details
+</div>
+<div class="nav-subtitle">Two-row compact navigation. Full module name is shown inside each screen.</div>
+""", unsafe_allow_html=True)
 
 mobile_mode = st.sidebar.toggle(
     "Mobile friendly mode",
