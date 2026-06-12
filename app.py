@@ -125,6 +125,18 @@ div[data-testid="stHorizontalBlock"] {
     }
 }
 
+
+/* Compact sidebar: keep only controls there; main banner is shown above dashboard */
+section[data-testid="stSidebar"] .block-container {
+    padding-top: 0.8rem !important;
+}
+
+@media (max-width: 768px) {
+    section[data-testid="stSidebar"] {
+        width: 180px !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -307,7 +319,9 @@ def plot_scatter_if_available(df: pd.DataFrame, x_col: str, y_col: str, title: s
 
 
 def chart_row():
-    return st.columns(1 if st.session_state.get("mobile_mode", False) else 2)
+    # Always return two containers because chart sections unpack as c1, c2.
+    # Mobile friendliness is handled through compact navigation and responsive Plotly charts.
+    return st.columns(2)
 
 
 @st.cache_data(show_spinner=False)
@@ -374,12 +388,7 @@ def load_all_data(excel_file=None):
     }
 
 
-st.sidebar.markdown(
-    """
-### Manulife PA Command Center
-**Author:** Le Hoang Quan
-"""
-)
+st.sidebar.markdown("### Controls")
 
 mobile_mode = st.sidebar.toggle(
     "Mobile friendly mode",
@@ -422,6 +431,25 @@ stakeholder_intelligence = data["stakeholder_intelligence"]
 early_warning = data["early_warning"]
 public_affairs_kpi = data["public_affairs_kpi"]
 regional_reporting = data["regional_reporting"]
+
+# Compact top header moved from the sidebar to the main screen.
+st.markdown("""
+<div style="
+    margin-top: 0.2rem;
+    margin-bottom: 0.6rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: linear-gradient(90deg, rgba(14,65,116,0.95), rgba(0,167,88,0.72));
+    color: white;
+">
+    <div style="font-size:1.25rem; font-weight:800; line-height:1.25;">
+        Manulife Regulatory and Public Affairs Command Center
+    </div>
+    <div style="font-size:0.92rem; margin-top:0.25rem; opacity:0.95;">
+        Author: Le Hoang Quan · Regulatory Affairs · Public Affairs · Government Relations · Regulatory Intelligence
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 
 NAV_ITEMS = [
