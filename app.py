@@ -209,6 +209,95 @@ def safe_count_in(df: pd.DataFrame, col: str, values) -> int:
     return int(df[col].astype(str).isin(values).sum())
 
 
+
+def plot_count_bar(df: pd.DataFrame, column: str, title: str, x_label: str | None = None):
+    if column not in df.columns or df.empty:
+        st.caption(f"No data available for chart: {title}")
+        return
+    chart_df = df[column].fillna("Unknown").astype(str).value_counts().reset_index()
+    chart_df.columns = [x_label or column, "Count"]
+    if len(chart_df):
+        st.plotly_chart(
+            px.bar(chart_df, x=x_label or column, y="Count", title=title),
+            use_container_width=True,
+        )
+
+
+def plot_horizontal_count_bar(df: pd.DataFrame, column: str, title: str):
+    if column not in df.columns or df.empty:
+        st.caption(f"No data available for chart: {title}")
+        return
+    chart_df = df[column].fillna("Unknown").astype(str).value_counts().reset_index()
+    chart_df.columns = [column, "Count"]
+    if len(chart_df):
+        st.plotly_chart(
+            px.bar(chart_df, x="Count", y=column, orientation="h", title=title),
+            use_container_width=True,
+        )
+
+
+def plot_numeric_bar(df: pd.DataFrame, x_col: str, y_col: str, title: str, color_col: str | None = None):
+    if df.empty or x_col not in df.columns or y_col not in df.columns:
+        st.caption(f"No data available for chart: {title}")
+        return
+    chart_df = df.copy()
+    chart_df[y_col] = pd.to_numeric(chart_df[y_col], errors="coerce")
+    chart_df = chart_df.dropna(subset=[y_col])
+    if len(chart_df):
+        st.plotly_chart(
+            px.bar(
+                chart_df,
+                x=x_col,
+                y=y_col,
+                color=color_col if color_col in chart_df.columns else None,
+                title=title,
+            ),
+            use_container_width=True,
+        )
+
+
+def plot_date_count_line(df: pd.DataFrame, date_col: str, title: str):
+    if df.empty or date_col not in df.columns:
+        st.caption(f"No data available for chart: {title}")
+        return
+    chart_df = df.copy()
+    chart_df[date_col] = pd.to_datetime(chart_df[date_col], errors="coerce")
+    chart_df = chart_df.dropna(subset=[date_col])
+    if not len(chart_df):
+        st.caption(f"No valid date data available for chart: {title}")
+        return
+    chart_df["Month"] = chart_df[date_col].dt.to_period("M").astype(str)
+    chart_df = chart_df.groupby("Month").size().reset_index(name="Count")
+    st.plotly_chart(px.line(chart_df, x="Month", y="Count", markers=True, title=title), use_container_width=True)
+
+
+def plot_scatter_if_available(df: pd.DataFrame, x_col: str, y_col: str, title: str, size_col: str | None = None, color_col: str | None = None, hover_col: str | None = None):
+    if df.empty or x_col not in df.columns or y_col not in df.columns:
+        st.caption(f"No data available for chart: {title}")
+        return
+    chart_df = safe_numeric(df, [x_col, y_col] + ([size_col] if size_col else []))
+    chart_df = chart_df.dropna(subset=[x_col, y_col])
+    if size_col and size_col in chart_df.columns:
+        chart_df[size_col] = pd.to_numeric(chart_df[size_col], errors="coerce").fillna(0.1).clip(lower=0.1)
+    if len(chart_df):
+        st.plotly_chart(
+            px.scatter(
+                chart_df,
+                x=x_col,
+                y=y_col,
+                size=size_col if size_col in chart_df.columns else None,
+                color=color_col if color_col in chart_df.columns else None,
+                hover_name=hover_col if hover_col in chart_df.columns else None,
+                title=title,
+            ),
+            use_container_width=True,
+        )
+
+
+def chart_row():
+    return st.columns(1 if st.session_state.get("mobile_mode", False) else 2)
+
+
 @st.cache_data(show_spinner=False)
 def load_all_data_from_csv_only():
     return load_all_data(None)
@@ -394,6 +483,7 @@ mobile_mode = st.sidebar.toggle(
     value=False,
     help="Use compact dropdown navigation and tighter layout for mobile screens.",
 )
+st.session_state["mobile_mode"] = mobile_mode
 
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = 0
@@ -464,6 +554,18 @@ if active_tab == 0:
         if len(readiness):
             st.plotly_chart(px.bar(readiness, x="Readiness", y="Count", title="Document Readiness"), use_container_width=True)
 
+    c3, c4 = chart_row()
+    with c3:
+        plot_count_bar(submissions, "Status", "Submission Status Mix")
+    with c4:
+        plot_count_bar(approvals, "Status", "Approval Pipeline Status")
+
+    c5, c6 = chart_row()
+    with c5:
+        plot_scatter_if_available(policies, "Probability (%)", "Business Impact (1-5)", "Policy Risk Scatter", size_col="Risk Score", color_col="Risk Level", hover_col="Policy / Regulation")
+    with c6:
+        plot_numeric_bar(inspection_readiness, "Area", "Readiness Score (0-100)", "Inspection Readiness by Area", color_col="RAG")
+
 elif active_tab == 1:
     st.title("Daily Control Tower")
     cols = st.columns(5)
@@ -472,6 +574,21 @@ elif active_tab == 1:
     cols[2].metric("Escalations", safe_metric_count(daily_actions, "Escalation", "Yes"))
     cols[3].metric("Docs not ready", int((document_qc.get("Auto Readiness", pd.Series(dtype=str)).astype(str)!="Ready").sum()))
     cols[4].metric("Open follow-ups", safe_count_in(interactions, "Status", ["Open", "In Progress"]))
+    c1, c2 = chart_row()
+    with c1:
+        plot_count_bar(daily_actions, "Priority", "Daily Actions by Priority")
+    with c2:
+        plot_count_bar(daily_actions, "Escalation", "Daily Actions by Escalation")
+    c3, c4 = chart_row()
+    with c3:
+        plot_count_bar(daily_actions, "Status", "Daily Actions by Status")
+    with c4:
+        if "Days to Due" in daily_actions.columns:
+            tmp = daily_actions.copy()
+            tmp["Days to Due"] = pd.to_numeric(tmp["Days to Due"], errors="coerce")
+            tmp = tmp.dropna(subset=["Days to Due"])
+            if len(tmp):
+                st.plotly_chart(px.histogram(tmp, x="Days to Due", nbins=12, title="Daily Actions Deadline Distribution"), use_container_width=True)
     st.dataframe(safe_sort(daily_actions, ["Priority", "Due Date"]), use_container_width=True)
 
 elif active_tab == 2:
@@ -479,6 +596,16 @@ elif active_tab == 2:
     status_values = sorted(calendar.get("Auto Status", pd.Series(dtype=str)).dropna().astype(str).unique())
     status = st.multiselect("Filter status", status_values, default=status_values)
     view = calendar[calendar["Auto Status"].astype(str).isin(status)] if status and "Auto Status" in calendar.columns else calendar
+    c1, c2 = chart_row()
+    with c1:
+        plot_count_bar(view, "Auto Status", "Calendar Items by Auto Status")
+    with c2:
+        plot_horizontal_count_bar(view, "Regulator", "Calendar Items by Regulator")
+    c3, c4 = chart_row()
+    with c3:
+        plot_count_bar(view, "Frequency", "Calendar Items by Frequency")
+    with c4:
+        plot_date_count_line(view, "Due Date", "Calendar Due Date Trend")
     st.dataframe(safe_sort(view, ["Due Date"]), use_container_width=True)
     st.download_button("Download calendar CSV", calendar.to_csv(index=False).encode("utf-8-sig"), "regulatory_calendar_export.csv")
 
@@ -489,6 +616,16 @@ elif active_tab == 3:
     c2.metric("Critical", safe_metric_count(obligations, "Criticality", "Critical"))
     c3.metric("Red / overdue", safe_metric_count(obligations, "RAG", "Red"))
     c4.metric("Due in 7 days", safe_metric_count(obligations, "RAG", "Amber"))
+    c5, c6 = chart_row()
+    with c5:
+        plot_count_bar(obligations, "Criticality", "Obligations by Criticality")
+    with c6:
+        plot_count_bar(obligations, "RAG", "Obligations by RAG")
+    c7, c8 = chart_row()
+    with c7:
+        plot_horizontal_count_bar(obligations, "Regulator", "Obligations by Regulator")
+    with c8:
+        plot_count_bar(obligations, "Frequency", "Obligations by Frequency")
     st.dataframe(safe_sort(obligations, ["Next Due Date"]), use_container_width=True)
 
 elif active_tab == 4:
@@ -498,6 +635,16 @@ elif active_tab == 4:
     c2.metric("Open responses", int((~responses.get("Status", pd.Series(dtype=str)).astype(str).isin(["Closed", "Submitted"])).sum()) if len(responses) else 0)
     c3.metric("Response overdue", safe_metric_count(responses, "SLA Status", "Overdue"))
     c4.metric("Response due soon", safe_metric_count(responses, "SLA Status", "Due Soon"))
+    c5, c6 = chart_row()
+    with c5:
+        plot_count_bar(responses, "SLA Status", "Regulatory Responses by SLA Status")
+    with c6:
+        plot_count_bar(submissions, "Status", "Submissions by Status")
+    c7, c8 = chart_row()
+    with c7:
+        plot_horizontal_count_bar(responses, "Regulator", "Responses by Regulator")
+    with c8:
+        plot_horizontal_count_bar(submissions, "Regulator", "Submissions by Regulator")
     st.subheader("Regulatory responses")
     st.dataframe(safe_sort(responses, ["Response Due Date"]), use_container_width=True)
     st.subheader("Submissions")
@@ -509,6 +656,16 @@ elif active_tab == 5:
     c1.metric("Ready", safe_metric_count(document_qc, "Auto Readiness", "Ready"))
     c2.metric("Needs review", safe_metric_count(document_qc, "Auto Readiness", "Needs Review"))
     c3.metric("Not ready", safe_metric_count(document_qc, "Auto Readiness", "Not Ready"))
+    c4, c5 = chart_row()
+    with c4:
+        plot_count_bar(document_qc, "Auto Readiness", "Documents by Readiness")
+    with c5:
+        plot_count_bar(document_qc, "Document Type", "Documents by Type")
+    c6, c7 = chart_row()
+    with c6:
+        plot_count_bar(document_qc, "Owner", "Documents by Owner")
+    with c7:
+        plot_date_count_line(document_qc, "Due Date", "Document Due Date Trend")
     st.dataframe(safe_sort(document_qc, ["Due Date"]), use_container_width=True)
 
 elif active_tab == 6:
@@ -521,6 +678,16 @@ elif active_tab == 6:
     stage = safe_value_counts(product_command, "Current Stage", "Stage")
     if len(stage):
         st.plotly_chart(px.bar(stage, x="Stage", y="Count", title="Approval Stage Mix"), use_container_width=True)
+    c4, c5 = chart_row()
+    with c4:
+        plot_count_bar(product_command, "Auto Risk", "Product Approval by Risk")
+    with c5:
+        plot_horizontal_count_bar(product_command, "Owner", "Product Approvals by Owner")
+    c6, c7 = chart_row()
+    with c6:
+        plot_date_count_line(product_command, "Target Approval Date", "Target Approval Date Trend")
+    with c7:
+        plot_count_bar(product_command, "Regulator", "Product Approval by Regulator")
 
 elif active_tab == 7:
     st.title("Workflow Engine")
@@ -532,6 +699,11 @@ elif active_tab == 7:
     st.dataframe(wv, use_container_width=True)
     if all(c in wv.columns for c in ["Stage", "SLA Days", "Status"]):
         st.plotly_chart(px.bar(wv, x="Stage", y="SLA Days", color="Status", title="Workflow SLA by Stage"), use_container_width=True)
+    c1, c2 = chart_row()
+    with c1:
+        plot_count_bar(wv, "Status", "Workflow Stages by Status")
+    with c2:
+        plot_count_bar(wv, "Owner", "Workflow Stages by Owner")
 
 elif active_tab == 8:
     st.title("Internal Coordination")
@@ -539,6 +711,16 @@ elif active_tab == 8:
     c1.metric("Open items", int((~internal_coordination.get("Status", pd.Series(dtype=str)).astype(str).isin(["Done", "Closed"])).sum()) if len(internal_coordination) else 0)
     c2.metric("Escalations", safe_metric_count(internal_coordination, "Escalation", "Yes"))
     c3.metric("Management attention", safe_count_in(internal_coordination, "Management Attention", ["Yes", "Potential"]))
+    c4, c5 = chart_row()
+    with c4:
+        plot_horizontal_count_bar(internal_coordination, "Department", "Internal Items by Department")
+    with c5:
+        plot_count_bar(internal_coordination, "Status", "Internal Items by Status")
+    c6, c7 = chart_row()
+    with c6:
+        plot_count_bar(internal_coordination, "Escalation", "Internal Items by Escalation")
+    with c7:
+        plot_count_bar(internal_coordination, "Management Attention", "Management Attention Distribution")
     st.dataframe(safe_sort(internal_coordination, ["Due Date"]), use_container_width=True)
 
 elif active_tab == 9:
@@ -546,6 +728,16 @@ elif active_tab == 9:
     regs = sorted(interactions.get("Regulator", pd.Series(dtype=str)).dropna().astype(str).unique().tolist())
     reg = st.selectbox("Select regulator", ["All"] + regs)
     view = interactions if reg == "All" or "Regulator" not in interactions.columns else interactions[interactions["Regulator"].astype(str) == reg]
+    c1, c2 = chart_row()
+    with c1:
+        plot_horizontal_count_bar(view, "Regulator", "Interactions by Regulator")
+    with c2:
+        plot_count_bar(view, "Status", "Interactions by Status")
+    c3, c4 = chart_row()
+    with c3:
+        plot_date_count_line(view, "Date", "Interaction Trend")
+    with c4:
+        plot_count_bar(view, "Interaction Type", "Interactions by Type")
     st.dataframe(safe_sort(view, ["Date"]), use_container_width=True)
 
 elif active_tab == 10:
@@ -585,6 +777,16 @@ elif active_tab == 11:
 
 elif active_tab == 12:
     st.title("Meeting Intelligence")
+    c1, c2 = chart_row()
+    with c1:
+        plot_horizontal_count_bar(meeting_intelligence, "Regulator", "Meetings by Regulator")
+    with c2:
+        plot_count_bar(meeting_intelligence, "Status", "Meetings by Status")
+    c3, c4 = chart_row()
+    with c3:
+        plot_date_count_line(meeting_intelligence, "Date", "Meeting Trend")
+    with c4:
+        plot_count_bar(meeting_intelligence, "Meeting Type", "Meetings by Type")
     st.dataframe(safe_sort(meeting_intelligence, ["Date"]), use_container_width=True)
     if "Meeting ID" in meeting_intelligence.columns and len(meeting_intelligence):
         selected = st.selectbox("Select meeting", meeting_intelligence["Meeting ID"].astype(str).tolist())
@@ -627,10 +829,20 @@ elif active_tab == 14:
     st.markdown(brief)
     st.download_button("Download Executive Brief", brief.encode("utf-8"), "daily_executive_brief.md")
     st.subheader("Executive / Regional Office brief history")
+    c1, c2 = chart_row()
+    with c1:
+        plot_count_bar(executive_brief_data, "Audience", "Briefs by Audience")
+    with c2:
+        plot_date_count_line(executive_brief_data, "Brief Date", "Briefing Trend")
     st.dataframe(executive_brief_data, use_container_width=True)
 
 elif active_tab == 15:
     st.title("Management Attention")
+    c1, c2 = chart_row()
+    with c1:
+        plot_count_bar(executive_attention, "Priority", "Attention Items by Priority")
+    with c2:
+        plot_horizontal_count_bar(executive_attention, "Owner", "Attention Items by Owner")
     st.dataframe(safe_sort(executive_attention, ["Priority"]), use_container_width=True)
     brief = generate_management_attention_brief(executive_attention, obligations, responses, product_command, internal_coordination, inspection_readiness)
     st.markdown(brief)
@@ -642,12 +854,22 @@ elif active_tab == 16:
     tc = safe_value_counts(translation, "Auto Status", "Status") if "Auto Status" in translation.columns else safe_value_counts(translation, "Status", "Status")
     if len(tc):
         st.plotly_chart(px.bar(tc, x="Status", y="Count", title="Translation Status"), use_container_width=True)
+    c1, c2 = chart_row()
+    with c1:
+        plot_count_bar(translation, "Language Direction", "Translation by Language Direction")
+    with c2:
+        plot_date_count_line(translation, "Due Date", "Translation Due Date Trend")
 
 elif active_tab == 17:
     st.title("Knowledge Base")
     st.caption("Demo knowledge base. Replace with Manulife's approved summaries and obligations register.")
     q = st.text_input("Ask a regulatory question or keyword", "product approval")
     st.markdown(knowledge_base_answer(knowledge_base, q))
+    c1, c2 = chart_row()
+    with c1:
+        plot_count_bar(knowledge_base, "Category", "Knowledge Base by Category")
+    with c2:
+        plot_horizontal_count_bar(knowledge_base, "Owner", "Knowledge Base by Owner")
     st.dataframe(knowledge_base, use_container_width=True)
 
 elif active_tab == 18:
@@ -672,6 +894,11 @@ elif active_tab == 18:
             ),
             use_container_width=True,
         )
+    c4, c5 = chart_row()
+    with c4:
+        plot_count_bar(stakeholder_intelligence, "Priority", "Stakeholders by Priority")
+    with c5:
+        plot_count_bar(stakeholder_intelligence, "Type", "Stakeholders by Type")
 
 elif active_tab == 19:
     st.title("Regulatory Early Warning")
@@ -697,6 +924,11 @@ elif active_tab == 19:
                 ),
                 use_container_width=True,
             )
+    c4, c5 = chart_row()
+    with c4:
+        plot_count_bar(early_warning, "Risk Level", "Early Warning by Risk Level")
+    with c5:
+        plot_horizontal_count_bar(early_warning, "Signal Source", "Signals by Source")
 
 elif active_tab == 20:
     st.title("Public Affairs KPI Dashboard")
@@ -710,6 +942,11 @@ elif active_tab == 20:
             px.bar(public_affairs_kpi, x="KPI", y="Actual", color="RAG", title="Public Affairs KPI Performance"),
             use_container_width=True,
         )
+    c4, c5 = chart_row()
+    with c4:
+        plot_count_bar(public_affairs_kpi, "RAG", "KPI RAG Distribution")
+    with c5:
+        plot_numeric_bar(public_affairs_kpi, "KPI", "Variance", "KPI Variance vs Target", color_col="RAG")
 
 elif active_tab == 21:
     st.title("Regional Office Reporting")
@@ -717,6 +954,11 @@ elif active_tab == 21:
     c1.metric("Report items", len(regional_reporting))
     c2.metric("Escalations", safe_metric_count(regional_reporting, "Escalation Required", "Yes"))
     c3.metric("High impact", safe_metric_count(regional_reporting, "Impact", "High"))
+    c4, c5 = chart_row()
+    with c4:
+        plot_count_bar(regional_reporting, "Impact", "Regional Reporting by Impact")
+    with c5:
+        plot_count_bar(regional_reporting, "Escalation Required", "Regional Escalation Required")
     st.dataframe(regional_reporting, use_container_width=True)
     if len(regional_reporting):
         st.subheader("Regional narrative draft")
@@ -733,5 +975,10 @@ elif active_tab == 22:
         tpl = email_templates[email_templates["Use Case"].astype(str) == use_case].iloc[0]
         st.subheader(tpl.get("Subject", "Email template"))
         st.text_area("Email body", tpl.get("Email Body Template", ""), height=260)
+    c1, c2 = chart_row()
+    with c1:
+        plot_count_bar(email_templates, "Use Case", "Email Templates by Use Case")
+    with c2:
+        plot_count_bar(email_templates, "Audience", "Email Templates by Audience")
     st.dataframe(email_templates, use_container_width=True)
     st.download_button("Download email templates CSV", email_templates.to_csv(index=False).encode("utf-8-sig"), "email_templates.csv")
