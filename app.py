@@ -187,8 +187,6 @@ st.sidebar.title(
 st.sidebar.markdown(
     """
 **Author:** Le Hoang Quan
-
-Regulatory Affairs • Public Affairs • Government Relations • Regulatory Intelligence
 """
 )
 
