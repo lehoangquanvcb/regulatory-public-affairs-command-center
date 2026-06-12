@@ -60,6 +60,23 @@ section[data-testid="stSidebar"] {
     font-size: 1.35rem;
 }
 
+st.markdown("""
+<style>
+div[data-baseweb="tab-list"] {
+    flex-wrap: wrap !important;
+    gap: 4px 8px !important;
+    overflow-x: visible !important;
+}
+
+button[data-baseweb="tab"] {
+    flex: 0 0 auto !important;
+    font-size: 13px !important;
+    padding: 8px 10px !important;
+    white-space: nowrap !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 /* Automatic responsive behavior for narrow screens */
 @media (max-width: 768px) {
     .block-container {
