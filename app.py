@@ -305,25 +305,7 @@ NAV_ITEMS = [
     "23. Email Templates",
 ]
 
-st.markdown("""
-<div style="
-background-color:#0E4174;
-padding:12px 14px;
-border-radius:6px;
-margin-top:10px;
-margin-bottom:10px;
-color:white;
-font-weight:700;
-font-size:16px;
-line-height:1.35;
-">
-Click below tabs to see details
-</div>
-""", unsafe_allow_html=True)
-
 tabs = st.tabs(NAV_ITEMS)
-
-
 
 with tabs[0]:
     st.title("Executive Dashboard")
