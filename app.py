@@ -72,6 +72,33 @@ button[data-baseweb="tab"] p {
 .block-container {
     padding-top: 1.0rem !important;
 }
+
+/* Fixed two-row navigation buttons */
+div[data-testid="stButton"] > button {
+    min-height: 34px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+}
+
+/* Mobile mode: make metrics, charts and tables breathe */
+@media (max-width: 768px) {
+    .block-container {
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
+    }
+    div[data-testid="stMetric"] {
+        padding: 0.35rem 0.2rem !important;
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 0.78rem !important;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.15rem !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -305,9 +332,72 @@ NAV_ITEMS = [
     "23. Email Templates",
 ]
 
-tabs = st.tabs(NAV_ITEMS)
+st.markdown("""
+<div style="
+background-color:#0E4174;
+padding:12px;
+border-radius:6px;
+margin-top:10px;
+margin-bottom:10px;
+color:white;
+font-weight:bold;
+font-size:16px;
+line-height:1.35;
+">
+Click below tabs to see details
+</div>
+""", unsafe_allow_html=True)
 
-with tabs[0]:
+mobile_mode = st.sidebar.toggle(
+    "Mobile friendly mode",
+    value=False,
+    help="Use compact dropdown navigation and tighter layout for mobile screens.",
+)
+
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = 0
+
+if mobile_mode:
+    selected_tab = st.selectbox(
+        "Navigation",
+        options=list(range(len(NAV_ITEMS))),
+        index=int(st.session_state.active_tab),
+        format_func=lambda i: NAV_ITEMS[i],
+        label_visibility="collapsed",
+    )
+    st.session_state.active_tab = int(selected_tab)
+else:
+    first_row = NAV_ITEMS[:12]
+    second_row = NAV_ITEMS[12:]
+
+    row1 = st.columns(len(first_row))
+    for i, label in enumerate(first_row):
+        with row1[i]:
+            if st.button(
+                label,
+                key=f"nav_tab_{i}",
+                type="primary" if st.session_state.active_tab == i else "secondary",
+                use_container_width=True,
+            ):
+                st.session_state.active_tab = i
+                st.rerun()
+
+    row2 = st.columns(len(second_row))
+    for j, label in enumerate(second_row):
+        i = j + 12
+        with row2[j]:
+            if st.button(
+                label,
+                key=f"nav_tab_{i}",
+                type="primary" if st.session_state.active_tab == i else "secondary",
+                use_container_width=True,
+            ):
+                st.session_state.active_tab = i
+                st.rerun()
+
+active_tab = int(st.session_state.active_tab)
+
+if active_tab == 0:
     st.title("Executive Dashboard")
     dummy_relationships = regulator_crm.copy()
     if "Relationship Strength (1-5)" not in dummy_relationships.columns:
@@ -332,7 +422,7 @@ with tabs[0]:
         if len(readiness):
             st.plotly_chart(px.bar(readiness, x="Readiness", y="Count", title="Document Readiness"), use_container_width=True)
 
-with tabs[1]:
+elif active_tab == 1:
     st.title("Daily Control Tower")
     cols = st.columns(5)
     cols[0].metric("Due today", int((daily_actions.get("Days to Due", pd.Series(dtype=float)) == 0).sum()))
@@ -342,7 +432,7 @@ with tabs[1]:
     cols[4].metric("Open follow-ups", safe_count_in(interactions, "Status", ["Open", "In Progress"]))
     st.dataframe(safe_sort(daily_actions, ["Priority", "Due Date"]), use_container_width=True)
 
-with tabs[2]:
+elif active_tab == 2:
     st.title("Regulatory Calendar")
     status_values = sorted(calendar.get("Auto Status", pd.Series(dtype=str)).dropna().astype(str).unique())
     status = st.multiselect("Filter status", status_values, default=status_values)
@@ -350,7 +440,7 @@ with tabs[2]:
     st.dataframe(safe_sort(view, ["Due Date"]), use_container_width=True)
     st.download_button("Download calendar CSV", calendar.to_csv(index=False).encode("utf-8-sig"), "regulatory_calendar_export.csv")
 
-with tabs[3]:
+elif active_tab == 3:
     st.title("Regulatory Obligation Register")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Total obligations", len(obligations))
@@ -359,7 +449,7 @@ with tabs[3]:
     c4.metric("Due in 7 days", safe_metric_count(obligations, "RAG", "Amber"))
     st.dataframe(safe_sort(obligations, ["Next Due Date"]), use_container_width=True)
 
-with tabs[4]:
+elif active_tab == 4:
     st.title("Submission & Response Tracker")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Pending submissions", int((~submissions.get("Status", pd.Series(dtype=str)).astype(str).isin(["Submitted", "Approved"])).sum()) if len(submissions) else 0)
@@ -371,7 +461,7 @@ with tabs[4]:
     st.subheader("Submissions")
     st.dataframe(safe_sort(submissions, ["Submission Due Date"]), use_container_width=True)
 
-with tabs[5]:
+elif active_tab == 5:
     st.title("Document Quality Checklist")
     c1, c2, c3 = st.columns(3)
     c1.metric("Ready", safe_metric_count(document_qc, "Auto Readiness", "Ready"))
@@ -379,7 +469,7 @@ with tabs[5]:
     c3.metric("Not ready", safe_metric_count(document_qc, "Auto Readiness", "Not Ready"))
     st.dataframe(safe_sort(document_qc, ["Due Date"]), use_container_width=True)
 
-with tabs[6]:
+elif active_tab == 6:
     st.title("Product Approval Command Center")
     c1, c2, c3 = st.columns(3)
     c1.metric("In pipeline", int((~product_command.get("Current Stage", pd.Series(dtype=str)).astype(str).isin(["Approved", "Rejected/Withdrawn"])).sum()) if len(product_command) else 0)
@@ -390,7 +480,7 @@ with tabs[6]:
     if len(stage):
         st.plotly_chart(px.bar(stage, x="Stage", y="Count", title="Approval Stage Mix"), use_container_width=True)
 
-with tabs[7]:
+elif active_tab == 7:
     st.title("Workflow Engine")
     if "Workflow Name" in workflow_engine.columns and len(workflow_engine):
         wf = st.selectbox("Workflow", sorted(workflow_engine["Workflow Name"].dropna().astype(str).unique().tolist()))
@@ -401,7 +491,7 @@ with tabs[7]:
     if all(c in wv.columns for c in ["Stage", "SLA Days", "Status"]):
         st.plotly_chart(px.bar(wv, x="Stage", y="SLA Days", color="Status", title="Workflow SLA by Stage"), use_container_width=True)
 
-with tabs[8]:
+elif active_tab == 8:
     st.title("Internal Coordination")
     c1, c2, c3 = st.columns(3)
     c1.metric("Open items", int((~internal_coordination.get("Status", pd.Series(dtype=str)).astype(str).isin(["Done", "Closed"])).sum()) if len(internal_coordination) else 0)
@@ -409,14 +499,14 @@ with tabs[8]:
     c3.metric("Management attention", safe_count_in(internal_coordination, "Management Attention", ["Yes", "Potential"]))
     st.dataframe(safe_sort(internal_coordination, ["Due Date"]), use_container_width=True)
 
-with tabs[9]:
+elif active_tab == 9:
     st.title("Regulator Interaction Log")
     regs = sorted(interactions.get("Regulator", pd.Series(dtype=str)).dropna().astype(str).unique().tolist())
     reg = st.selectbox("Select regulator", ["All"] + regs)
     view = interactions if reg == "All" or "Regulator" not in interactions.columns else interactions[interactions["Regulator"].astype(str) == reg]
     st.dataframe(safe_sort(view, ["Date"]), use_container_width=True)
 
-with tabs[10]:
+elif active_tab == 10:
     st.title("Regulator CRM")
     regs = sorted(regulator_crm.get("Regulator", pd.Series(dtype=str)).dropna().astype(str).unique().tolist())
     if regs:
@@ -440,7 +530,7 @@ with tabs[10]:
         plot["Relationship Strength (1-5)"] = plot["Relationship Strength (1-5)"].fillna(1).clip(lower=1)
         st.plotly_chart(px.scatter(plot, x="Power (1-5)", y="Interest (1-5)", size="Relationship Strength (1-5)", color="Sentiment" if "Sentiment" in plot.columns else None, hover_name="Regulator", title="Power-Interest Relationship Map"), use_container_width=True)
 
-with tabs[11]:
+elif active_tab == 11:
     st.title("Policy Monitoring & Risk Radar")
     st.dataframe(safe_sort(policies, ["Risk Score"]), use_container_width=True)
     required = ["Probability (%)", "Business Impact (1-5)", "Risk Score", "Policy / Regulation"]
@@ -451,7 +541,7 @@ with tabs[11]:
         if len(plot):
             st.plotly_chart(px.scatter(plot, x="Probability (%)", y="Business Impact (1-5)", size="Risk Score", color="Risk Level" if "Risk Level" in plot.columns else None, hover_name="Policy / Regulation", title="Policy Risk Radar"), use_container_width=True)
 
-with tabs[12]:
+elif active_tab == 12:
     st.title("Meeting Intelligence")
     st.dataframe(safe_sort(meeting_intelligence, ["Date"]), use_container_width=True)
     if "Meeting ID" in meeting_intelligence.columns and len(meeting_intelligence):
@@ -478,7 +568,7 @@ with tabs[12]:
         st.markdown(brief)
         st.download_button("Download brief", brief.encode("utf-8"), "meeting_brief.md")
 
-with tabs[13]:
+elif active_tab == 13:
     st.title("Inspection Readiness")
     c1, c2, c3 = st.columns(3)
     avg_score = round(float(pd.to_numeric(inspection_readiness.get("Readiness Score (0-100)", pd.Series(dtype=float)), errors="coerce").mean()), 1) if len(inspection_readiness) else 0
@@ -489,7 +579,7 @@ with tabs[13]:
     if all(c in inspection_readiness.columns for c in ["Area", "Readiness Score (0-100)", "RAG"]):
         st.plotly_chart(px.bar(inspection_readiness, x="Area", y="Readiness Score (0-100)", color="RAG", title="Inspection Readiness by Area"), use_container_width=True)
 
-with tabs[14]:
+elif active_tab == 14:
     st.title("Executive Brief")
     brief = generate_executive_brief(calendar, submissions, approvals, policies, interactions, document_qc, None)
     st.markdown(brief)
@@ -497,28 +587,28 @@ with tabs[14]:
     st.subheader("Executive / Regional Office brief history")
     st.dataframe(executive_brief_data, use_container_width=True)
 
-with tabs[15]:
+elif active_tab == 15:
     st.title("Management Attention")
     st.dataframe(safe_sort(executive_attention, ["Priority"]), use_container_width=True)
     brief = generate_management_attention_brief(executive_attention, obligations, responses, product_command, internal_coordination, inspection_readiness)
     st.markdown(brief)
     st.download_button("Download Management Attention Brief", brief.encode("utf-8"), "management_attention_brief.md")
 
-with tabs[16]:
+elif active_tab == 16:
     st.title("Translation Tracker")
     st.dataframe(safe_sort(translation, ["Due Date"]), use_container_width=True)
     tc = safe_value_counts(translation, "Auto Status", "Status") if "Auto Status" in translation.columns else safe_value_counts(translation, "Status", "Status")
     if len(tc):
         st.plotly_chart(px.bar(tc, x="Status", y="Count", title="Translation Status"), use_container_width=True)
 
-with tabs[17]:
+elif active_tab == 17:
     st.title("Knowledge Base")
     st.caption("Demo knowledge base. Replace with Manulife's approved summaries and obligations register.")
     q = st.text_input("Ask a regulatory question or keyword", "product approval")
     st.markdown(knowledge_base_answer(knowledge_base, q))
     st.dataframe(knowledge_base, use_container_width=True)
 
-with tabs[18]:
+elif active_tab == 18:
     st.title("Stakeholder Intelligence")
     c1, c2, c3 = st.columns(3)
     c1.metric("Critical stakeholders", safe_metric_count(stakeholder_intelligence, "Priority", "Critical"))
@@ -541,7 +631,7 @@ with tabs[18]:
             use_container_width=True,
         )
 
-with tabs[19]:
+elif active_tab == 19:
     st.title("Regulatory Early Warning")
     c1, c2, c3 = st.columns(3)
     c1.metric("Signals monitored", len(early_warning))
@@ -566,7 +656,7 @@ with tabs[19]:
                 use_container_width=True,
             )
 
-with tabs[20]:
+elif active_tab == 20:
     st.title("Public Affairs KPI Dashboard")
     c1, c2, c3 = st.columns(3)
     c1.metric("KPIs", len(public_affairs_kpi))
@@ -579,7 +669,7 @@ with tabs[20]:
             use_container_width=True,
         )
 
-with tabs[21]:
+elif active_tab == 21:
     st.title("Regional Office Reporting")
     c1, c2, c3 = st.columns(3)
     c1.metric("Report items", len(regional_reporting))
@@ -594,7 +684,7 @@ with tabs[21]:
             lines.append(f"- **{row.get('Topic','')}** ({row.get('Impact','')} impact): {row.get('Management Message','')} _{esc}._")
         st.markdown("\n".join(lines))
 
-with tabs[22]:
+elif active_tab == 22:
     st.title("Email Templates")
     if "Use Case" in email_templates.columns and len(email_templates):
         use_case = st.selectbox("Select template", email_templates["Use Case"].astype(str).tolist())
