@@ -189,8 +189,21 @@ def read_source(csv_name: str, excel_file=None, sheet_name: str | None = None) -
         if header_idx is None:
             return df
 
-        header = raw.iloc[header_idx].tolist()
-        values = raw.iloc[header_idx + 1 :].copy()
+        # In the formatted Excel sheet, the row containing "Priority Action List"
+        # is a section title. The real table header is the next non-empty row.
+        header_row_idx = None
+        for rr in range(header_idx + 1, min(header_idx + 8, len(raw))):
+            row_values = [str(v).strip() for v in raw.iloc[rr].tolist() if pd.notna(v)]
+            row_text = " | ".join(row_values).lower()
+            if "source" in row_text and "item" in row_text and "due date" in row_text:
+                header_row_idx = rr
+                break
+
+        if header_row_idx is None:
+            header_row_idx = header_idx + 1
+
+        header = raw.iloc[header_row_idx].tolist()
+        values = raw.iloc[header_row_idx + 1 :].copy()
         values.columns = [str(c).replace("\n", " ").strip() for c in header]
         values = values.dropna(how="all")
 
@@ -199,7 +212,8 @@ def read_source(csv_name: str, excel_file=None, sheet_name: str | None = None) -
         values[first_col] = values[first_col].astype(str).str.strip()
         stop_mask = values[first_col].str.lower().str.contains("how to use", na=False)
         if stop_mask.any():
-            values = values.loc[: stop_mask.idxmax() - 1]
+            stop_index = stop_mask[stop_mask].index[0]
+            values = values.loc[values.index < stop_index]
 
         rename_map = {
             "Priority Action List": "Action",
