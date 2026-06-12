@@ -24,10 +24,14 @@ from utils.model import (
     add_meeting_intelligence_metrics,
     add_inspection_readiness_metrics,
     generate_management_attention_brief,
+    add_stakeholder_intelligence_metrics,
+    add_early_warning_metrics,
+    add_public_affairs_kpi_metrics,
+    add_regional_reporting_metrics,
 )
 
 st.set_page_config(
-    page_title="Manulife Regulatory Affairs Command Center",
+    page_title="Manulife Regulatory and Public Affairs Command Center - Author: Le Hoang Quan",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -166,6 +170,19 @@ def load_all_data(excel_file=None):
     executive_attention = read_source("executive_attention_today.csv", excel_file, "Executive_Attention_Today")
     email_templates = read_source("email_template_generator.csv", excel_file, "Email_Template_Generator")
 
+    stakeholder_intelligence = add_stakeholder_intelligence_metrics(read_source(
+        "stakeholder_intelligence.csv", excel_file, "Stakeholder_Intelligence"
+    ))
+    early_warning = add_early_warning_metrics(read_source(
+        "regulatory_early_warning.csv", excel_file, "Regulatory_Early_Warning"
+    ))
+    public_affairs_kpi = add_public_affairs_kpi_metrics(read_source(
+        "public_affairs_kpi.csv", excel_file, "Public_Affairs_KPI"
+    ))
+    regional_reporting = add_regional_reporting_metrics(read_source(
+        "regional_reporting.csv", excel_file, "Regional_Reporting"
+    ))
+
     return {
         "calendar": calendar, "submissions": submissions, "approvals": approvals,
         "interactions": interactions, "policies": policies, "translation": translation,
@@ -177,6 +194,10 @@ def load_all_data(excel_file=None):
         "meeting_intelligence": meeting_intelligence,
         "inspection_readiness": inspection_readiness, "executive_attention": executive_attention,
         "email_templates": email_templates,
+        "stakeholder_intelligence": stakeholder_intelligence,
+        "early_warning": early_warning,
+        "public_affairs_kpi": public_affairs_kpi,
+        "regional_reporting": regional_reporting,
     }
 
 
@@ -187,10 +208,12 @@ st.sidebar.title(
 st.sidebar.markdown(
     """
 **Author:** Le Hoang Quan
+
+Regulatory Affairs • Public Affairs • Government Relations • Regulatory Intelligence
 """
 )
 
-st.sidebar.info("Use demo CSVs or upload the Excel v8 master tracker.")
+st.sidebar.info("Use demo CSVs or upload the Excel v9 master tracker.")
 uploaded_excel = st.sidebar.file_uploader("Optional: upload Excel master tracker", type=["xlsx"])
 if uploaded_excel:
     st.sidebar.success("Excel master uploaded. App will read matching sheets where available.")
@@ -219,6 +242,10 @@ meeting_intelligence = data["meeting_intelligence"]
 inspection_readiness = data["inspection_readiness"]
 executive_attention = data["executive_attention"]
 email_templates = data["email_templates"]
+stakeholder_intelligence = data["stakeholder_intelligence"]
+early_warning = data["early_warning"]
+public_affairs_kpi = data["public_affairs_kpi"]
+regional_reporting = data["regional_reporting"]
 
 
 menu = st.sidebar.radio(
@@ -242,7 +269,11 @@ menu = st.sidebar.radio(
         "16. Management Attention",
         "17. Translation Tracker",
         "18. Knowledge Base",
-        "19. Email Templates",
+        "19. Stakeholder Intelligence",
+        "20. Regulatory Early Warning",
+        "21. Public Affairs KPI",
+        "22. Regional Reporting",
+        "23. Email Templates",
     ],
 )
 
@@ -459,7 +490,83 @@ elif menu == "18. Knowledge Base":
     st.markdown(knowledge_base_answer(knowledge_base, q))
     st.dataframe(knowledge_base, use_container_width=True)
 
-elif menu == "19. Email Templates":
+elif menu == "19. Stakeholder Intelligence":
+    st.title("Stakeholder Intelligence")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Critical stakeholders", safe_metric_count(stakeholder_intelligence, "Priority", "Critical"))
+    c2.metric("High-risk relationships", safe_metric_count(stakeholder_intelligence, "Engagement RAG", "Red"))
+    c3.metric("Total stakeholders", len(stakeholder_intelligence))
+    st.dataframe(safe_sort(stakeholder_intelligence, ["Priority", "Stakeholder Risk Score"]), use_container_width=True)
+    if all(c in stakeholder_intelligence.columns for c in ["Influence (1-5)", "Relationship (1-5)", "Stakeholder"]):
+        plot = safe_numeric(stakeholder_intelligence, ["Influence (1-5)", "Relationship (1-5)", "Stakeholder Risk Score"])
+        plot["Stakeholder Risk Score"] = plot["Stakeholder Risk Score"].fillna(0.1).clip(lower=0.1)
+        st.plotly_chart(
+            px.scatter(
+                plot,
+                x="Influence (1-5)",
+                y="Relationship (1-5)",
+                size="Stakeholder Risk Score",
+                color="Position" if "Position" in plot.columns else None,
+                hover_name="Stakeholder",
+                title="Stakeholder Influence vs Relationship Map",
+            ),
+            use_container_width=True,
+        )
+
+elif menu == "20. Regulatory Early Warning":
+    st.title("Regulatory Early Warning")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Signals monitored", len(early_warning))
+    c2.metric("High signals", safe_metric_count(early_warning, "Risk Level", "High"))
+    c3.metric("Avg probability", round(float(pd.to_numeric(early_warning.get("Probability (%)", pd.Series(dtype=float)), errors="coerce").mean()), 1) if len(early_warning) else 0)
+    st.dataframe(safe_sort(early_warning, ["Early Warning Score"]), use_container_width=True)
+    if all(c in early_warning.columns for c in ["Probability (%)", "Business Impact (1-5)", "Early Warning Score", "Topic"]):
+        plot = safe_numeric(early_warning, ["Probability (%)", "Business Impact (1-5)", "Early Warning Score"])
+        plot = plot.dropna(subset=["Probability (%)", "Business Impact (1-5)"])
+        plot["Early Warning Score"] = plot["Early Warning Score"].fillna(0.1).clip(lower=0.1)
+        if len(plot):
+            st.plotly_chart(
+                px.scatter(
+                    plot,
+                    x="Probability (%)",
+                    y="Business Impact (1-5)",
+                    size="Early Warning Score",
+                    color="Risk Level" if "Risk Level" in plot.columns else None,
+                    hover_name="Topic",
+                    title="Regulatory Change Probability vs Business Impact",
+                ),
+                use_container_width=True,
+            )
+
+elif menu == "21. Public Affairs KPI":
+    st.title("Public Affairs KPI Dashboard")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("KPIs", len(public_affairs_kpi))
+    c2.metric("Green", safe_metric_count(public_affairs_kpi, "RAG", "Green"))
+    c3.metric("Amber/Red", safe_count_in(public_affairs_kpi, "RAG", ["Amber", "Red"]))
+    st.dataframe(public_affairs_kpi, use_container_width=True)
+    if all(c in public_affairs_kpi.columns for c in ["KPI", "Actual", "RAG"]):
+        st.plotly_chart(
+            px.bar(public_affairs_kpi, x="KPI", y="Actual", color="RAG", title="Public Affairs KPI Performance"),
+            use_container_width=True,
+        )
+
+elif menu == "22. Regional Reporting":
+    st.title("Regional Office Reporting")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Report items", len(regional_reporting))
+    c2.metric("Escalations", safe_metric_count(regional_reporting, "Escalation Required", "Yes"))
+    c3.metric("High impact", safe_metric_count(regional_reporting, "Impact", "High"))
+    st.dataframe(regional_reporting, use_container_width=True)
+    if len(regional_reporting):
+        st.subheader("Regional narrative draft")
+        lines = []
+        for _, row in regional_reporting.iterrows():
+            esc = "Escalation required" if str(row.get("Escalation Required", "")) == "Yes" else "Monitor"
+            lines.append(f"- **{row.get('Topic','')}** ({row.get('Impact','')} impact): {row.get('Management Message','')} _{esc}._")
+        st.markdown("\n".join(lines))
+
+elif menu == "23. Email Templates":
     st.title("Email Templates")
     if "Use Case" in email_templates.columns and len(email_templates):
         use_case = st.selectbox("Select template", email_templates["Use Case"].astype(str).tolist())

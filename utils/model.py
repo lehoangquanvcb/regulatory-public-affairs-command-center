@@ -397,3 +397,53 @@ def generate_management_attention_brief(executive_attention, obligations, respon
 3. Prepare evidence packs for high-sensitivity areas: product approval, bancassurance and complaints.
 4. Keep Regional Office informed if any regulatory matter becomes material.
 """
+
+
+# =============================
+# v9 Strategic Public Affairs modules
+# =============================
+
+def add_stakeholder_intelligence_metrics(df):
+    df = ensure_columns(df, [
+        "Stakeholder", "Type", "Influence (1-5)", "Position",
+        "Relationship (1-5)", "Priority", "Owner",
+        "Last Engagement", "Next Engagement"
+    ])
+    df = parse_dates(df, ["Last Engagement", "Next Engagement"])
+    df = safe_to_numeric(df, ["Influence (1-5)", "Relationship (1-5)"])
+    df["Influence (1-5)"] = df["Influence (1-5)"].fillna(0)
+    df["Relationship (1-5)"] = df["Relationship (1-5)"].fillna(0)
+    df["Stakeholder Risk Score"] = (df["Influence (1-5)"] * (6 - df["Relationship (1-5)"])).round(2)
+    df["Engagement RAG"] = df["Stakeholder Risk Score"].apply(
+        lambda x: "Red" if pd.notna(x) and x >= 15 else ("Amber" if pd.notna(x) and x >= 8 else "Green")
+    )
+    if "Next Engagement" in df.columns:
+        df["Days to Next Engagement"] = (df["Next Engagement"] - TODAY).dt.days
+    return df
+
+
+def add_early_warning_metrics(df):
+    df = ensure_columns(df, [
+        "Topic", "Signal Source", "Probability (%)", "Expected Timing",
+        "Business Impact (1-5)", "Risk Level", "Recommended Action"
+    ])
+    df = safe_to_numeric(df, ["Probability (%)", "Business Impact (1-5)"])
+    df["Probability (%)"] = df["Probability (%)"].fillna(0)
+    df["Business Impact (1-5)"] = df["Business Impact (1-5)"].fillna(0)
+    df["Early Warning Score"] = (df["Probability (%)"] * df["Business Impact (1-5)"] / 100).round(2)
+    df["Calculated Signal Level"] = pd.cut(
+        df["Early Warning Score"], bins=[-1, 2, 3.5, 99], labels=["Low", "Medium", "High"]
+    )
+    return df
+
+
+def add_public_affairs_kpi_metrics(df):
+    df = ensure_columns(df, ["KPI", "Target", "Actual", "RAG", "Owner", "Comment"])
+    df = safe_to_numeric(df, ["Target", "Actual"])
+    df["Variance"] = (df["Actual"] - df["Target"]).round(2)
+    return df
+
+
+def add_regional_reporting_metrics(df):
+    df = ensure_columns(df, ["Month", "Topic", "Impact", "Escalation Required", "Owner", "Management Message"])
+    return df
