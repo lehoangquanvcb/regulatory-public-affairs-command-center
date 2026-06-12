@@ -38,104 +38,60 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-/* Sidebar removed: all controls are moved to the top of the main page */
-section[data-testid="stSidebar"] {
-    display: none !important;
+section[data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none !important; }
+.block-container {
+    padding-top: clamp(0.4rem, 1.2vw, 1rem) !important;
+    padding-left: clamp(0.75rem, 2.2vw, 2.2rem) !important;
+    padding-right: clamp(0.75rem, 2.2vw, 2.2rem) !important;
+    max-width: 100% !important;
 }
-[data-testid="collapsedControl"] {
-    display: none !important;
-}
-
 .top-command-banner {
-    margin-top: 0.2rem;
-    margin-bottom: 0.6rem;
-    padding: 0.85rem 1rem;
+    margin-top: 0.2rem; margin-bottom: 0.55rem;
+    padding: clamp(0.55rem, 1.2vw, 0.9rem) clamp(0.65rem, 1.5vw, 1rem);
     border-radius: 10px;
     background: linear-gradient(90deg, rgba(14,65,116,0.95), rgba(0,167,88,0.72));
     color: white;
 }
-.top-command-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    line-height: 1.25;
+.top-command-title { font-size: clamp(0.95rem, 2.8vw, 1.35rem); font-weight: 800; line-height: 1.22; }
+.top-command-subtitle { font-size: clamp(0.72rem, 2.1vw, 0.92rem); margin-top: 0.18rem; opacity: 0.95; }
+.responsive-title {
+    font-size: clamp(1.55rem, 6vw, 2.65rem) !important;
+    line-height: 1.12 !important;
+    margin: 0.85rem 0 0.8rem 0 !important;
+    font-weight: 800 !important;
 }
-.top-command-subtitle {
-    font-size: 0.92rem;
-    margin-top: 0.25rem;
-    opacity: 0.95;
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 0.75rem;
+    margin: 0.45rem 0 1.25rem 0;
 }
-
-/* Keep the horizontal tabs visible on multiple rows instead of hiding overflow behind the > arrow */
-.stTabs [role="tablist"],
-div[data-baseweb="tab-list"] {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 4px 8px !important;
-    overflow-x: visible !important;
-    overflow-y: visible !important;
-    height: auto !important;
-    max-height: none !important;
+.metric-card {
+    border: 1px solid rgba(148,163,184,0.22);
+    border-radius: 12px;
+    padding: 0.75rem 0.85rem;
+    background: rgba(30,41,59,0.23);
+    min-height: 82px;
 }
-
-.stTabs [role="tab"],
-button[data-baseweb="tab"] {
-    flex: 0 0 auto !important;
-    font-size: 12px !important;
-    padding: 6px 8px !important;
-    white-space: nowrap !important;
-    margin-bottom: 4px !important;
-}
-
-.stTabs [role="tab"] p,
-button[data-baseweb="tab"] p {
-    font-size: 12px !important;
-}
-
-/* Reduce default top spacing so the banner and wrapped tabs do not overlap */
-.block-container {
-    padding-top: 0.5rem !important;
-}
-
-/* Clean compact navigation buttons */
+.metric-label { font-size: clamp(0.72rem, 2.2vw, 0.88rem); color: #BFC7D5; line-height: 1.2; margin-bottom: 0.45rem; }
+.metric-value { font-size: clamp(1.25rem, 5vw, 2rem); font-weight: 800; color: inherit; line-height: 1.1; }
 div[data-testid="stButton"] > button {
-    min-height: 38px !important;
-    padding: 7px 6px !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    white-space: nowrap !important;
-    border-radius: 9px !important;
+    min-height: 32px !important; padding: 5px 6px !important;
+    font-size: 11px !important; font-weight: 700 !important;
+    white-space: nowrap !important; border-radius: 8px !important;
     border: 1px solid rgba(255,255,255,0.22) !important;
 }
-
-/* Reduce vertical gap between navigation rows */
-div[data-testid="stHorizontalBlock"] {
-    gap: 0.45rem !important;
+div[data-testid="stHorizontalBlock"] { gap: 0.45rem !important; }
+[data-testid="stDataFrame"], .js-plotly-plot { max-width: 100% !important; }
+@media (max-width: 900px) {
+    .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
+    .metric-card { padding: 0.62rem 0.68rem; min-height: 74px; }
 }
-
-/* Keep nav area visually separated from content */
-.nav-subtitle {
-    color: #BFC7D5;
-    font-size: 13px;
-    margin: -4px 0 8px 2px;
+@media (max-width: 380px) {
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .metric-label { font-size: 0.70rem; }
+    .metric-value { font-size: 1.15rem; }
 }
-
-/* Mobile mode: make metrics, charts and tables breathe */
-@media (max-width: 768px) {
-    .block-container {
-        padding-left: 0.8rem !important;
-        padding-right: 0.8rem !important;
-    }
-    div[data-testid="stMetric"] {
-        padding: 0.35rem 0.2rem !important;
-    }
-    [data-testid="stMetricLabel"] {
-        font-size: 0.78rem !important;
-    }
-    [data-testid="stMetricValue"] {
-        font-size: 1.15rem !important;
-    }
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -424,13 +380,30 @@ def plot_scatter_if_available(df: pd.DataFrame, x_col: str, y_col: str, title: s
 
 
 def chart_row():
-    """Return two chart containers consistently.
-
-Streamlit automatically stacks columns on narrow/mobile screens.
-Returning a single column caused unpacking errors in calls such as
-`c1, c2 = chart_row()` when Mobile friendly mode was enabled.
-"""
+    """Return two chart containers. Streamlit stacks them naturally on narrow screens."""
     return st.columns(2)
+
+
+def _fmt_metric_value(value):
+    if pd.isna(value):
+        return "—"
+    if isinstance(value, float):
+        return f"{value:,.2f}" if value % 1 else f"{value:,.0f}"
+    return f"{value}"
+
+
+def render_metric_grid(metrics):
+    """Responsive KPI cards that stay compact on desktop and mobile."""
+    cards = []
+    for label, value in metrics:
+        cards.append(
+            '<div class="metric-card"><div class="metric-label">{}</div><div class="metric-value">{}</div></div>'.format(label, _fmt_metric_value(value))
+        )
+    st.markdown('<div class="metric-grid">' + ''.join(cards) + '</div>', unsafe_allow_html=True)
+
+
+def page_title(title: str):
+    st.markdown(f'<h1 class="responsive-title">{title}</h1>', unsafe_allow_html=True)
 
 
 @st.cache_data(show_spinner=False)
@@ -504,21 +477,18 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-with st.expander("Controls and Excel data source", expanded=True):
-    ctrl_col1, ctrl_col2 = st.columns([1, 2])
-    with ctrl_col1:
-        mobile_mode = st.toggle(
-            "Mobile friendly mode",
-            value=False,
-            help="Use compact dropdown navigation and responsive chart layout for mobile screens.",
-        )
-        st.session_state["mobile_mode"] = mobile_mode
-    with ctrl_col2:
-        uploaded_excel = st.file_uploader("Upload Excel master tracker", type=["xlsx"])
-        if uploaded_excel:
-            st.success("Excel master uploaded. App will read matching sheets where available.")
-        else:
-            st.caption("No Excel uploaded. Using /data/*.csv demo data.")
+with st.expander("Controls and Excel data source", expanded=False):
+    mobile_mode = st.toggle(
+        "Mobile friendly mode",
+        value=True,
+        help="Use compact navigation and responsive KPI layout for small screens.",
+    )
+    st.session_state["mobile_mode"] = mobile_mode
+    uploaded_excel = st.file_uploader("Upload Excel master tracker", type=["xlsx"])
+    if uploaded_excel:
+        st.success("Excel master uploaded. App will read matching sheets where available.")
+    else:
+        st.caption("No Excel uploaded. Using /data/*.csv demo data.")
 
 data = load_all_data(uploaded_excel)
 
@@ -607,49 +577,29 @@ st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = 0
 
-if mobile_mode:
-    selected_tab = st.selectbox(
-        "Navigation",
-        options=list(range(len(NAV_ITEMS))),
-        index=int(st.session_state.active_tab),
-        format_func=lambda i: NAV_ITEMS[i],
-        label_visibility="collapsed",
-    )
-    st.session_state.active_tab = int(selected_tab)
-else:
-    first_row = NAV_LABELS[:12]
-    second_row = NAV_LABELS[12:]
+selected_tab = st.selectbox(
+    "Module",
+    options=list(range(len(NAV_ITEMS))),
+    index=int(st.session_state.active_tab),
+    format_func=lambda i: NAV_ITEMS[i],
+)
+st.session_state.active_tab = int(selected_tab)
 
-    row1 = st.columns(len(first_row))
-    for i, label in enumerate(first_row):
-        with row1[i]:
-            if st.button(
-                label,
-                key=f"nav_tab_{i}",
-                type="primary" if st.session_state.active_tab == i else "secondary",
-                use_container_width=True,
-            ):
-                st.session_state.active_tab = i
-                st.rerun()
-
-    row2 = st.columns(len(second_row))
-    for j, label in enumerate(second_row):
-        i = j + 12
-        with row2[j]:
-            if st.button(
-                label,
-                key=f"nav_tab_{i}",
-                type="primary" if st.session_state.active_tab == i else "secondary",
-                use_container_width=True,
-            ):
-                st.session_state.active_tab = i
-                st.rerun()
+with st.expander("Quick navigation buttons", expanded=False):
+    for row_start, row_size in [(0, 6), (6, 6), (12, 6), (18, 5)]:
+        row = st.columns(row_size)
+        for j, label in enumerate(NAV_LABELS[row_start:row_start + row_size]):
+            i = row_start + j
+            with row[j]:
+                if st.button(label, key=f"nav_top_{i}", type="primary" if st.session_state.active_tab == i else "secondary", use_container_width=True):
+                    st.session_state.active_tab = i
+                    st.rerun()
 
 active_tab = int(st.session_state.active_tab)
 st.caption(f"Current module: {NAV_ITEMS[active_tab]}")
 
 if active_tab == 0:
-    st.title("Executive Dashboard")
+    page_title("Executive Dashboard")
     dummy_relationships = regulator_crm.copy()
     if "Relationship Strength (1-5)" not in dummy_relationships.columns:
         dummy_relationships["Relationship Strength (1-5)"] = pd.NA
@@ -659,9 +609,7 @@ if active_tab == 0:
         "High-risk approvals": safe_metric_count(product_command, "Auto Risk", "High"),
         "Inspection amber/red": int(inspection_readiness.get("RAG", pd.Series(dtype=str)).astype(str).isin(["Amber", "Red"]).sum()) if len(inspection_readiness) else 0,
     })
-    cols = st.columns(5)
-    for i, (k, v) in enumerate(kpis.items()):
-        cols[i % 5].metric(k, v)
+    render_metric_grid(list(kpis.items()))
 
     c1, c2 = st.columns(2)
     with c1:
@@ -686,7 +634,7 @@ if active_tab == 0:
         plot_numeric_bar(inspection_readiness, "Area", "Readiness Score (0-100)", "Inspection Readiness by Area", color_col="RAG")
 
 elif active_tab == 1:
-    st.title("Daily Control Tower")
+    page_title("Daily Control Tower")
     daily_view = daily_actions.copy()
     if "Days Left" in daily_view.columns and "Days to Due" not in daily_view.columns:
         daily_view["Days to Due"] = pd.to_numeric(daily_view["Days Left"], errors="coerce")
@@ -695,12 +643,13 @@ elif active_tab == 1:
     if "Due Date" in daily_view.columns:
         daily_view["Due Date"] = pd.to_datetime(daily_view["Due Date"], errors="coerce")
 
-    cols = st.columns(5)
-    cols[0].metric("Due today", int((daily_view.get("Days to Due", pd.Series(dtype=float)) == 0).sum()))
-    cols[1].metric("Overdue actions", int((daily_view.get("Days to Due", pd.Series(dtype=float)) < 0).sum()))
-    cols[2].metric("Escalations", safe_metric_count(daily_view, "Escalation", "Yes"))
-    cols[3].metric("High-risk actions", safe_metric_count(daily_view, "Risk", "High"))
-    cols[4].metric("Open follow-ups", safe_count_in(interactions, "Status", ["Open", "In Progress"]))
+    render_metric_grid([
+        ("Due today", int((daily_view.get("Days to Due", pd.Series(dtype=float)) == 0).sum())),
+        ("Overdue actions", int((daily_view.get("Days to Due", pd.Series(dtype=float)) < 0).sum())),
+        ("Escalations", safe_metric_count(daily_view, "Escalation", "Yes")),
+        ("High-risk actions", safe_metric_count(daily_view, "Risk", "High")),
+        ("Open follow-ups", safe_count_in(interactions, "Status", ["Open", "In Progress"])),
+    ])
 
     c1, c2 = chart_row()
     with c1:
@@ -732,7 +681,7 @@ elif active_tab == 1:
     st.dataframe(safe_sort(daily_view[visible_cols] if visible_cols else daily_view, ["Risk", "Due Date"]), use_container_width=True)
 
 elif active_tab == 2:
-    st.title("Regulatory Calendar")
+    page_title("Regulatory Calendar")
     status_values = sorted(calendar.get("Auto Status", pd.Series(dtype=str)).dropna().astype(str).unique())
     status = st.multiselect("Filter status", status_values, default=status_values)
     view = calendar[calendar["Auto Status"].astype(str).isin(status)] if status and "Auto Status" in calendar.columns else calendar
@@ -750,12 +699,13 @@ elif active_tab == 2:
     st.download_button("Download calendar CSV", calendar.to_csv(index=False).encode("utf-8-sig"), "regulatory_calendar_export.csv")
 
 elif active_tab == 3:
-    st.title("Regulatory Obligation Register")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total obligations", len(obligations))
-    c2.metric("Critical", safe_metric_count(obligations, "Criticality", "Critical"))
-    c3.metric("Red / overdue", safe_metric_count(obligations, "RAG", "Red"))
-    c4.metric("Due in 7 days", safe_metric_count(obligations, "RAG", "Amber"))
+    page_title("Regulatory Obligation Register")
+    render_metric_grid([
+        ("Total obligations", len(obligations)),
+        ("Critical", safe_metric_count(obligations, "Criticality", "Critical")),
+        ("Red / overdue", safe_metric_count(obligations, "RAG", "Red")),
+        ("Due in 7 days", safe_metric_count(obligations, "RAG", "Amber")),
+    ])
     c5, c6 = chart_row()
     with c5:
         plot_count_bar(obligations, "Criticality", "Obligations by Criticality")
@@ -769,12 +719,13 @@ elif active_tab == 3:
     st.dataframe(safe_sort(obligations, ["Next Due Date"]), use_container_width=True)
 
 elif active_tab == 4:
-    st.title("Submission & Response Tracker")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Pending submissions", int((~submissions.get("Status", pd.Series(dtype=str)).astype(str).isin(["Submitted", "Approved"])).sum()) if len(submissions) else 0)
-    c2.metric("Open responses", int((~responses.get("Status", pd.Series(dtype=str)).astype(str).isin(["Closed", "Submitted"])).sum()) if len(responses) else 0)
-    c3.metric("Response overdue", safe_metric_count(responses, "SLA Status", "Overdue"))
-    c4.metric("Response due soon", safe_metric_count(responses, "SLA Status", "Due Soon"))
+    page_title("Submission & Response Tracker")
+    render_metric_grid([
+        ("Pending submissions", int((~submissions.get("Status", pd.Series(dtype=str)).astype(str).isin(["Submitted", "Approved"])).sum()) if len(submissions) else 0),
+        ("Open responses", int((~responses.get("Status", pd.Series(dtype=str)).astype(str).isin(["Closed", "Submitted"])).sum()) if len(responses) else 0),
+        ("Response overdue", safe_metric_count(responses, "SLA Status", "Overdue")),
+        ("Response due soon", safe_metric_count(responses, "SLA Status", "Due Soon")),
+    ])
     c5, c6 = chart_row()
     with c5:
         plot_count_bar(responses, "SLA Status", "Regulatory Responses by SLA Status")
@@ -791,11 +742,12 @@ elif active_tab == 4:
     st.dataframe(safe_sort(submissions, ["Submission Due Date"]), use_container_width=True)
 
 elif active_tab == 5:
-    st.title("Document Quality Checklist")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Ready", safe_metric_count(document_qc, "Auto Readiness", "Ready"))
-    c2.metric("Needs review", safe_metric_count(document_qc, "Auto Readiness", "Needs Review"))
-    c3.metric("Not ready", safe_metric_count(document_qc, "Auto Readiness", "Not Ready"))
+    page_title("Document Quality Checklist")
+    render_metric_grid([
+        ("Ready", safe_metric_count(document_qc, "Auto Readiness", "Ready")),
+        ("Needs review", safe_metric_count(document_qc, "Auto Readiness", "Needs Review")),
+        ("Not ready", safe_metric_count(document_qc, "Auto Readiness", "Not Ready")),
+    ])
     c4, c5 = chart_row()
     with c4:
         plot_count_bar(document_qc, "Auto Readiness", "Documents by Readiness")
@@ -809,11 +761,12 @@ elif active_tab == 5:
     st.dataframe(safe_sort(document_qc, ["Due Date"]), use_container_width=True)
 
 elif active_tab == 6:
-    st.title("Product Approval Command Center")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("In pipeline", int((~product_command.get("Current Stage", pd.Series(dtype=str)).astype(str).isin(["Approved", "Rejected/Withdrawn"])).sum()) if len(product_command) else 0)
-    c2.metric("High risk", safe_metric_count(product_command, "Auto Risk", "High"))
-    c3.metric("Approved", safe_metric_count(product_command, "Current Stage", "Approved"))
+    page_title("Product Approval Command Center")
+    render_metric_grid([
+        ("In pipeline", int((~product_command.get("Current Stage", pd.Series(dtype=str)).astype(str).isin(["Approved", "Rejected/Withdrawn"])).sum()) if len(product_command) else 0),
+        ("High risk", safe_metric_count(product_command, "Auto Risk", "High")),
+        ("Approved", safe_metric_count(product_command, "Current Stage", "Approved")),
+    ])
     st.dataframe(safe_sort(product_command, ["Target Approval Date"]), use_container_width=True)
     stage = safe_value_counts(product_command, "Current Stage", "Stage")
     if len(stage):
@@ -830,7 +783,7 @@ elif active_tab == 6:
         plot_count_bar(product_command, "Regulator", "Product Approval by Regulator")
 
 elif active_tab == 7:
-    st.title("Workflow Engine")
+    page_title("Workflow Engine")
     if "Workflow Name" in workflow_engine.columns and len(workflow_engine):
         wf = st.selectbox("Workflow", sorted(workflow_engine["Workflow Name"].dropna().astype(str).unique().tolist()))
         wv = workflow_engine[workflow_engine["Workflow Name"].astype(str) == wf]
@@ -846,11 +799,12 @@ elif active_tab == 7:
         plot_count_bar(wv, "Owner", "Workflow Stages by Owner")
 
 elif active_tab == 8:
-    st.title("Internal Coordination")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Open items", int((~internal_coordination.get("Status", pd.Series(dtype=str)).astype(str).isin(["Done", "Closed"])).sum()) if len(internal_coordination) else 0)
-    c2.metric("Escalations", safe_metric_count(internal_coordination, "Escalation", "Yes"))
-    c3.metric("Management attention", safe_count_in(internal_coordination, "Management Attention", ["Yes", "Potential"]))
+    page_title("Internal Coordination")
+    render_metric_grid([
+        ("Open items", int((~internal_coordination.get("Status", pd.Series(dtype=str)).astype(str).isin(["Done", "Closed"])).sum()) if len(internal_coordination) else 0),
+        ("Escalations", safe_metric_count(internal_coordination, "Escalation", "Yes")),
+        ("Management attention", safe_count_in(internal_coordination, "Management Attention", ["Yes", "Potential"])),
+    ])
     c4, c5 = chart_row()
     with c4:
         plot_horizontal_count_bar(internal_coordination, "Department", "Internal Items by Department")
@@ -864,7 +818,7 @@ elif active_tab == 8:
     st.dataframe(safe_sort(internal_coordination, ["Due Date"]), use_container_width=True)
 
 elif active_tab == 9:
-    st.title("Regulator Interaction Log")
+    page_title("Regulator Interaction Log")
     regs = sorted(interactions.get("Regulator", pd.Series(dtype=str)).dropna().astype(str).unique().tolist())
     reg = st.selectbox("Select regulator", ["All"] + regs)
     view = interactions if reg == "All" or "Regulator" not in interactions.columns else interactions[interactions["Regulator"].astype(str) == reg]
@@ -881,15 +835,16 @@ elif active_tab == 9:
     st.dataframe(safe_sort(view, ["Date"]), use_container_width=True)
 
 elif active_tab == 10:
-    st.title("Regulator CRM")
+    page_title("Regulator CRM")
     regs = sorted(regulator_crm.get("Regulator", pd.Series(dtype=str)).dropna().astype(str).unique().tolist())
     if regs:
         reg = st.selectbox("CRM regulator", regs)
         profile = regulator_crm[regulator_crm["Regulator"].astype(str) == reg].iloc[0]
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Relationship", profile.get("Relationship Strength (1-5)", ""))
-        c2.metric("Sentiment", profile.get("Sentiment", ""))
-        c3.metric("Priority", profile.get("Engagement Priority", profile.get("Engagement Owner", "")))
+        render_metric_grid([
+            ("Relationship", profile.get("Relationship Strength (1-5)", "")),
+            ("Sentiment", profile.get("Sentiment", "")),
+            ("Priority", profile.get("Engagement Priority", profile.get("Engagement Owner", ""))),
+        ])
         st.markdown(f"""
 ### {reg} Profile
 **Mandate / Role:** {profile.get('Mandate / Role','')}  
@@ -905,7 +860,7 @@ elif active_tab == 10:
         st.plotly_chart(px.scatter(plot, x="Power (1-5)", y="Interest (1-5)", size="Relationship Strength (1-5)", color="Sentiment" if "Sentiment" in plot.columns else None, hover_name="Regulator", title="Power-Interest Relationship Map"), use_container_width=True)
 
 elif active_tab == 11:
-    st.title("Policy Monitoring & Risk Radar")
+    page_title("Policy Monitoring & Risk Radar")
     st.dataframe(safe_sort(policies, ["Risk Score"]), use_container_width=True)
     required = ["Probability (%)", "Business Impact (1-5)", "Risk Score", "Policy / Regulation"]
     if all(c in policies.columns for c in required):
@@ -916,7 +871,7 @@ elif active_tab == 11:
             st.plotly_chart(px.scatter(plot, x="Probability (%)", y="Business Impact (1-5)", size="Risk Score", color="Risk Level" if "Risk Level" in plot.columns else None, hover_name="Policy / Regulation", title="Policy Risk Radar"), use_container_width=True)
 
 elif active_tab == 12:
-    st.title("Meeting Intelligence")
+    page_title("Meeting Intelligence")
     c1, c2 = chart_row()
     with c1:
         plot_horizontal_count_bar(meeting_intelligence, "Regulator", "Meetings by Regulator")
@@ -953,18 +908,19 @@ elif active_tab == 12:
         st.download_button("Download brief", brief.encode("utf-8"), "meeting_brief.md")
 
 elif active_tab == 13:
-    st.title("Inspection Readiness")
-    c1, c2, c3 = st.columns(3)
+    page_title("Inspection Readiness")
     avg_score = round(float(pd.to_numeric(inspection_readiness.get("Readiness Score (0-100)", pd.Series(dtype=float)), errors="coerce").mean()), 1) if len(inspection_readiness) else 0
-    c1.metric("Average readiness", avg_score)
-    c2.metric("Red areas", safe_metric_count(inspection_readiness, "RAG", "Red"))
-    c3.metric("Amber areas", safe_metric_count(inspection_readiness, "RAG", "Amber"))
+    render_metric_grid([
+        ("Average readiness", avg_score),
+        ("Red areas", safe_metric_count(inspection_readiness, "RAG", "Red")),
+        ("Amber areas", safe_metric_count(inspection_readiness, "RAG", "Amber")),
+    ])
     st.dataframe(safe_sort(inspection_readiness, ["Readiness Score (0-100)"]), use_container_width=True)
     if all(c in inspection_readiness.columns for c in ["Area", "Readiness Score (0-100)", "RAG"]):
         st.plotly_chart(px.bar(inspection_readiness, x="Area", y="Readiness Score (0-100)", color="RAG", title="Inspection Readiness by Area"), use_container_width=True)
 
 elif active_tab == 14:
-    st.title("Executive Brief")
+    page_title("Executive Brief")
     brief = generate_executive_brief(calendar, submissions, approvals, policies, interactions, document_qc, None)
     st.markdown(brief)
     st.download_button("Download Executive Brief", brief.encode("utf-8"), "daily_executive_brief.md")
@@ -977,7 +933,7 @@ elif active_tab == 14:
     st.dataframe(executive_brief_data, use_container_width=True)
 
 elif active_tab == 15:
-    st.title("Management Attention")
+    page_title("Management Attention")
     c1, c2 = chart_row()
     with c1:
         plot_count_bar(executive_attention, "Priority", "Attention Items by Priority")
@@ -989,7 +945,7 @@ elif active_tab == 15:
     st.download_button("Download Management Attention Brief", brief.encode("utf-8"), "management_attention_brief.md")
 
 elif active_tab == 16:
-    st.title("Translation Tracker")
+    page_title("Translation Tracker")
     st.dataframe(safe_sort(translation, ["Due Date"]), use_container_width=True)
     tc = safe_value_counts(translation, "Auto Status", "Status") if "Auto Status" in translation.columns else safe_value_counts(translation, "Status", "Status")
     if len(tc):
@@ -1001,7 +957,7 @@ elif active_tab == 16:
         plot_date_count_line(translation, "Due Date", "Translation Due Date Trend")
 
 elif active_tab == 17:
-    st.title("Knowledge Base")
+    page_title("Knowledge Base")
     st.caption("Demo knowledge base. Replace with Manulife's approved summaries and obligations register.")
     q = st.text_input("Ask a regulatory question or keyword", "product approval")
     st.markdown(knowledge_base_answer(knowledge_base, q))
@@ -1013,11 +969,12 @@ elif active_tab == 17:
     st.dataframe(knowledge_base, use_container_width=True)
 
 elif active_tab == 18:
-    st.title("Stakeholder Intelligence")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Critical stakeholders", safe_metric_count(stakeholder_intelligence, "Priority", "Critical"))
-    c2.metric("High-risk relationships", safe_metric_count(stakeholder_intelligence, "Engagement RAG", "Red"))
-    c3.metric("Total stakeholders", len(stakeholder_intelligence))
+    page_title("Stakeholder Intelligence")
+    render_metric_grid([
+        ("Critical stakeholders", safe_metric_count(stakeholder_intelligence, "Priority", "Critical")),
+        ("High-risk relationships", safe_metric_count(stakeholder_intelligence, "Engagement RAG", "Red")),
+        ("Total stakeholders", len(stakeholder_intelligence)),
+    ])
     st.dataframe(safe_sort(stakeholder_intelligence, ["Priority", "Stakeholder Risk Score"]), use_container_width=True)
     if all(c in stakeholder_intelligence.columns for c in ["Influence (1-5)", "Relationship (1-5)", "Stakeholder"]):
         plot = safe_numeric(stakeholder_intelligence, ["Influence (1-5)", "Relationship (1-5)", "Stakeholder Risk Score"])
@@ -1041,11 +998,12 @@ elif active_tab == 18:
         plot_count_bar(stakeholder_intelligence, "Type", "Stakeholders by Type")
 
 elif active_tab == 19:
-    st.title("Regulatory Early Warning")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Signals monitored", len(early_warning))
-    c2.metric("High signals", safe_metric_count(early_warning, "Risk Level", "High"))
-    c3.metric("Avg probability", round(float(pd.to_numeric(early_warning.get("Probability (%)", pd.Series(dtype=float)), errors="coerce").mean()), 1) if len(early_warning) else 0)
+    page_title("Regulatory Early Warning")
+    render_metric_grid([
+        ("Signals monitored", len(early_warning)),
+        ("High signals", safe_metric_count(early_warning, "Risk Level", "High")),
+        ("Avg probability", round(float(pd.to_numeric(early_warning.get("Probability (%)", pd.Series(dtype=float)), errors="coerce").mean()), 1) if len(early_warning) else 0),
+    ])
     st.dataframe(safe_sort(early_warning, ["Early Warning Score"]), use_container_width=True)
     if all(c in early_warning.columns for c in ["Probability (%)", "Business Impact (1-5)", "Early Warning Score", "Topic"]):
         plot = safe_numeric(early_warning, ["Probability (%)", "Business Impact (1-5)", "Early Warning Score"])
@@ -1071,11 +1029,12 @@ elif active_tab == 19:
         plot_horizontal_count_bar(early_warning, "Signal Source", "Signals by Source")
 
 elif active_tab == 20:
-    st.title("Public Affairs KPI Dashboard")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("KPIs", len(public_affairs_kpi))
-    c2.metric("Green", safe_metric_count(public_affairs_kpi, "RAG", "Green"))
-    c3.metric("Amber/Red", safe_count_in(public_affairs_kpi, "RAG", ["Amber", "Red"]))
+    page_title("Public Affairs KPI Dashboard")
+    render_metric_grid([
+        ("KPIs", len(public_affairs_kpi)),
+        ("Green", safe_metric_count(public_affairs_kpi, "RAG", "Green")),
+        ("Amber/Red", safe_count_in(public_affairs_kpi, "RAG", ["Amber", "Red"])),
+    ])
     st.dataframe(public_affairs_kpi, use_container_width=True)
     if all(c in public_affairs_kpi.columns for c in ["KPI", "Actual", "RAG"]):
         st.plotly_chart(
@@ -1089,11 +1048,12 @@ elif active_tab == 20:
         plot_numeric_bar(public_affairs_kpi, "KPI", "Variance", "KPI Variance vs Target", color_col="RAG")
 
 elif active_tab == 21:
-    st.title("Regional Office Reporting")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Report items", len(regional_reporting))
-    c2.metric("Escalations", safe_metric_count(regional_reporting, "Escalation Required", "Yes"))
-    c3.metric("High impact", safe_metric_count(regional_reporting, "Impact", "High"))
+    page_title("Regional Office Reporting")
+    render_metric_grid([
+        ("Report items", len(regional_reporting)),
+        ("Escalations", safe_metric_count(regional_reporting, "Escalation Required", "Yes")),
+        ("High impact", safe_metric_count(regional_reporting, "Impact", "High")),
+    ])
     c4, c5 = chart_row()
     with c4:
         plot_count_bar(regional_reporting, "Impact", "Regional Reporting by Impact")
@@ -1109,7 +1069,7 @@ elif active_tab == 21:
         st.markdown("\n".join(lines))
 
 elif active_tab == 22:
-    st.title("Email Templates")
+    page_title("Email Templates")
     if "Use Case" in email_templates.columns and len(email_templates):
         use_case = st.selectbox("Select template", email_templates["Use Case"].astype(str).tolist())
         tpl = email_templates[email_templates["Use Case"].astype(str) == use_case].iloc[0]
