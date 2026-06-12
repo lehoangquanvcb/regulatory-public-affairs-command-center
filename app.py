@@ -381,7 +381,7 @@ margin-top:10px;
 margin-bottom:10px;
 color:white;
 font-weight:bold;
-font-size:16px;
+font-size:12px;
 line-height:1.35;
 ">
 Click below buttons to see details
