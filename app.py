@@ -33,13 +33,25 @@ from utils.model import (
 st.set_page_config(
     page_title="Manulife Regulatory and Public Affairs Command Center - Author: Le Hoang Quan",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown("""
 <style>
 section[data-testid="stSidebar"] {
-    width: 320px !important;
+    width: 260px !important;
+}
+
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3 {
+    line-height: 1.15 !important;
+}
+
+@media (max-width: 768px) {
+    section[data-testid="stSidebar"] {
+        width: 220px !important;
+    }
 }
 
 /* Keep the horizontal tabs visible on multiple rows instead of hiding overflow behind the > arrow */
@@ -362,24 +374,27 @@ def load_all_data(excel_file=None):
     }
 
 
-st.sidebar.title(
-    "Manulife Regulatory and Public Affairs Command Center"
-)
-
 st.sidebar.markdown(
     """
+### Manulife PA Command Center
 **Author:** Le Hoang Quan
-
-Regulatory Affairs • Public Affairs • Government Relations • Regulatory Intelligence
 """
 )
 
-st.sidebar.info("Use demo CSVs or upload the Excel v9 master tracker.")
-uploaded_excel = st.sidebar.file_uploader("Optional: upload Excel master tracker", type=["xlsx"])
-if uploaded_excel:
-    st.sidebar.success("Excel master uploaded. App will read matching sheets where available.")
-else:
-    st.sidebar.caption("No Excel uploaded. Using /data/*.csv demo data.")
+mobile_mode = st.sidebar.toggle(
+    "Mobile friendly mode",
+    value=False,
+    help="Use compact dropdown navigation and tighter layout for mobile screens.",
+)
+st.session_state["mobile_mode"] = mobile_mode
+
+with st.sidebar.expander("Excel data source", expanded=False):
+    st.caption("Use demo CSVs or upload the Excel v9 master tracker.")
+    uploaded_excel = st.file_uploader("Upload Excel master tracker", type=["xlsx"])
+    if uploaded_excel:
+        st.success("Excel master uploaded. App will read matching sheets where available.")
+    else:
+        st.caption("No Excel uploaded. Using /data/*.csv demo data.")
 
 data = load_all_data(uploaded_excel)
 
@@ -461,29 +476,9 @@ NAV_LABELS = [
     "23. Email",
 ]
 
-st.markdown("""
-<div style="
-background-color:#0E4174;
-padding:12px;
-border-radius:6px;
-margin-top:20px;
-margin-bottom:0px;
-color:white;
-font-weight:bold;
-font-size:16px;
-line-height:1.35;
-">
-Click below buttons to see details
-</div>
-<div class="nav-subtitle">Two-row compact navigation. Full module name is shown inside each screen.</div>
-""", unsafe_allow_html=True)
+st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
-mobile_mode = st.sidebar.toggle(
-    "Mobile friendly mode",
-    value=False,
-    help="Use compact dropdown navigation and tighter layout for mobile screens.",
-)
-st.session_state["mobile_mode"] = mobile_mode
+
 
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = 0
