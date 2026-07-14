@@ -170,13 +170,15 @@ def load_all(excel_file=None):
     }
 
 
-<<<<<<< HEAD
-st.markdown("""
+st.markdown(
+    """
 <div class="top-command-banner">
-    <div class="top-command-title">`````````````````````````````````````````````````````````````````</div>
-    <div class="top-command-subtitle">Manulife Regulatory and Public Affairs Command Center</div>
-    <div class="Author: Le Hoang Quan</div>
-=======
+    <div class="top-command-title">Manulife Regulatory and Public Affairs Command Center - Author: Le Hoang Quan</div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
 st.sidebar.title("Manulife Regulatory and Public Affairs Command Center")
 st.sidebar.markdown("**Author:** Le Hoang Quan")
 st.sidebar.caption("v10 Executive Edition")
@@ -234,7 +236,7 @@ st.markdown(
     """
 <div style="background:#0E4174;padding:12px;border-radius:7px;margin:8px 0 10px 0;color:white;font-weight:700;font-size:16px;line-height:1.35;">
 Click below tabs to see details
->>>>>>> 1c1ca49 (Upgrade to v10 Executive Edition)
+
 </div>
 """,
     unsafe_allow_html=True,
