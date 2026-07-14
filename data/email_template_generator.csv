@@ -1,4 +1,4 @@
-﻿Template ID,Use Case,Subject,Recipient Type,Trigger,Email Body Template
+Template ID,Use Case,Subject,Recipient Type,Trigger,Email Body Template
 EMAIL-001,Internal deadline reminder,Reminder: Regulatory input required for [Item] by [Due Date],Internal department,Due in 7 days,"Dear [Name],
 
 This is a kind reminder that input for [Item] is required by [Due Date] for submission to [Regulator]. Please share the latest version and supporting documents by [Internal Deadline] so that Regulatory & Public Affairs can complete review and submission on time.

@@ -1,28 +1,11 @@
 ﻿Policy ID,Policy / Regulation,Agency,Policy Stage,Expected Timeline,Probability (%),Business Impact (1-5),Reputation Impact (1-5),Risk Score,Opportunity,Recommended Action,Owner
-POL-001,Insurance Law amendment,MOF,Draft discussion,0-3 months,38,3,4,4.56,High,"Monitor, prepare internal memo and engage via association",Legal
-POL-002,Circular on product approval process,ISA,Consultation,0-3 months,65,5,3,9.75,Medium,"Monitor, prepare internal memo and engage via association",Compliance
-POL-003,Bancassurance conduct guideline,SBV / MOF,Drafting,6-12 months,74,2,5,7.4,Medium,"Monitor, prepare internal memo and engage via association",Legal
-POL-004,Personal data protection implementation,MIC,Implementation,12+ months,38,5,4,7.6,High,"Monitor, prepare internal memo and engage via association",Legal
-POL-005,Consumer protection reporting requirement,VCA,Effective soon,0-3 months,66,5,1,3.3,Medium,"Monitor, prepare internal memo and engage via association",Compliance
-POL-006,Mandatory ESG disclosure for insurers,MOF,Early consultation,6-12 months,39,3,3,3.51,Medium,"Monitor, prepare internal memo and engage via association",Public Affairs
-POL-007,Capital adequacy and solvency update,ISA,Consultation,0-3 months,64,5,1,3.2,High,"Monitor, prepare internal memo and engage via association",Compliance
-POL-008,Agency training standard revision,ISA,Drafting,12+ months,62,5,2,6.2,Medium,"Monitor, prepare internal memo and engage via association",Risk
-POL-009,Digital insurance distribution rules,MIC / MOF,Policy design,6-12 months,60,5,1,3,Medium,"Monitor, prepare internal memo and engage via association",Public Affairs
-POL-010,Complaint handling transparency requirement,VCA / ISA,Drafting,3-6 months,77,4,3,9.24,High,"Monitor, prepare internal memo and engage via association",Risk
-Consolidation Note,"Risk_Radar and Regulatory_News_Feed consolidated here. Use Policy_Monitoring as the single source for policy signals, probability, impact and recommended actions.",,,,,,,,,,
-Consolidated Risk Radar Items,,,,,,,,,,,
-Risk ID,Regulatory Topic,Agency,Probability (1-5),Impact (1-5),Preparedness (1-5),Risk Score,Risk Level,Early Warning Signal,Recommended Action,Owner,
-RR-001,Capital adequacy and solvency update,ISA,4,5,3,6.666666666666667,High,Draft circular discussion and industry consultation,Prepare capital impact note and engage via IAV,Finance + PA,
-RR-002,Product approval process tightening,ISA,5,5,3,8.333333333333334,High,More detailed Q&A requests from regulator,Create product dossier checklist and Q&A evidence bank,Product + PA,
-RR-003,Bancassurance conduct guideline,SBV / MOF,4,5,3,6.666666666666667,High,Banking sector conduct review and consumer complaints,Develop customer-protection narrative and sales governance evidence,Bancassurance + Compliance,
-RR-004,Data localization and privacy enforcement,MIC,4,4,2,8,High,New data consultation and privacy inspections,Prepare data-flow map and compliance briefing,Digital + Legal,
-RR-005,Consumer complaint transparency requirement,VCA / ISA,3,4,3,,Medium,Increased complaint reporting and media attention,Prepare complaint KPI pack and remediation narrative,Compliance,
-RR-006,Mandatory ESG disclosure,MOF,3,2,3,,Low,Green finance roadmap and peer disclosure practices,Create baseline ESG disclosure template,Finance + PA,
-Consolidated Regulatory News / Signal Items,,,,,,,,,,,
-Signal ID,Date,Source / Agency,Headline / Signal,Category,Auto Tag,Relevance to Manulife,Probability (1-5),Impact (1-5),Signal Score,Suggested Action,Owner
-NEWS-001,2026-06-04 00:00:00,MOF,Draft discussion on capital adequacy strengthening,Capital,Capital,Potential increase in capital planning and reporting pressure,4,5,30.4,Prepare capital impact note and Finance briefing,Finance / PA
-NEWS-002,2026-06-05 00:00:00,ISA,Market conduct inspection activity increases across insurers,Consumer Protection,Market Conduct,"Higher scrutiny on complaints, sales conduct and product disclosure",5,4,3.3,Review complaint report and sales training evidence,Compliance / PA
-NEWS-003,2026-06-06 00:00:00,IAV,Working group formed on standardized product disclosure,Product Approval,Product,Opportunity to shape industry position on disclosure standards,3,4,10.53,Join working group and draft Manulife input,Product / PA
-NEWS-004,2026-06-07 00:00:00,MIC,Consultation on data localization implementation guidance,Data Privacy,Data,Potential impact on digital insurance and regional data processing,4,4,3.2,Prepare data-flow map and legal position,IT / Legal
-NEWS-005,2026-06-08 00:00:00,SBV,Review of bancassurance sales practice risk,Distribution,Bancassurance,Potential change to bank channel monitoring requirements,4,5,12.4,Coordinate with bank partners and Compliance,Distribution
-NEWS-006,2026-06-10 00:00:00,Regional Office,APAC request for ESG disclosure readiness update,ESG,ESG,Need consistent local-to-regional ESG reporting pack,3,3,3,Prepare ESG readiness note,Strategy / PA
+POL-001,Insurance Law amendment,MOF,Draft discussion,0-3 months,38,3,4,,High,"Monitor, prepare internal memo and engage via association",Legal
+POL-002,Circular on product approval process,ISA,Consultation,0-3 months,65,5,3,,Medium,"Monitor, prepare internal memo and engage via association",Compliance
+POL-003,Bancassurance conduct guideline,SBV / MOF,Drafting,6-12 months,74,2,5,,Medium,"Monitor, prepare internal memo and engage via association",Legal
+POL-004,Personal data protection implementation,MIC,Implementation,12+ months,38,5,4,,High,"Monitor, prepare internal memo and engage via association",Legal
+POL-005,Consumer protection reporting requirement,VCA,Effective soon,0-3 months,66,5,1,,Medium,"Monitor, prepare internal memo and engage via association",Compliance
+POL-006,Mandatory ESG disclosure for insurers,MOF,Early consultation,6-12 months,39,3,3,,Medium,"Monitor, prepare internal memo and engage via association",Public Affairs
+POL-007,Capital adequacy and solvency update,ISA,Consultation,0-3 months,64,5,1,,High,"Monitor, prepare internal memo and engage via association",Compliance
+POL-008,Agency training standard revision,ISA,Drafting,12+ months,62,5,2,,Medium,"Monitor, prepare internal memo and engage via association",Risk
+POL-009,Digital insurance distribution rules,MIC / MOF,Policy design,6-12 months,60,5,1,,Medium,"Monitor, prepare internal memo and engage via association",Public Affairs
+POL-010,Complaint handling transparency requirement,VCA / ISA,Drafting,3-6 months,77,4,3,,High,"Monitor, prepare internal memo and engage via association",Risk

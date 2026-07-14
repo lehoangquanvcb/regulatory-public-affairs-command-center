@@ -398,9 +398,8 @@ def generate_management_attention_brief(executive_attention, obligations, respon
 4. Keep Regional Office informed if any regulatory matter becomes material.
 """
 
-
 # =============================
-# v9 Strategic Public Affairs modules
+# v10 Executive Edition modules
 # =============================
 
 def add_stakeholder_intelligence_metrics(df):
@@ -417,8 +416,7 @@ def add_stakeholder_intelligence_metrics(df):
     df["Engagement RAG"] = df["Stakeholder Risk Score"].apply(
         lambda x: "Red" if pd.notna(x) and x >= 15 else ("Amber" if pd.notna(x) and x >= 8 else "Green")
     )
-    if "Next Engagement" in df.columns:
-        df["Days to Next Engagement"] = (df["Next Engagement"] - TODAY).dt.days
+    df["Days to Next Engagement"] = (df["Next Engagement"] - TODAY).dt.days
     return df
 
 
@@ -431,9 +429,6 @@ def add_early_warning_metrics(df):
     df["Probability (%)"] = df["Probability (%)"].fillna(0)
     df["Business Impact (1-5)"] = df["Business Impact (1-5)"].fillna(0)
     df["Early Warning Score"] = (df["Probability (%)"] * df["Business Impact (1-5)"] / 100).round(2)
-    df["Calculated Signal Level"] = pd.cut(
-        df["Early Warning Score"], bins=[-1, 2, 3.5, 99], labels=["Low", "Medium", "High"]
-    )
     return df
 
 
@@ -445,5 +440,139 @@ def add_public_affairs_kpi_metrics(df):
 
 
 def add_regional_reporting_metrics(df):
-    df = ensure_columns(df, ["Month", "Topic", "Impact", "Escalation Required", "Owner", "Management Message"])
+    return ensure_columns(df, ["Month", "Topic", "Impact", "Escalation Required", "Owner", "Management Message"])
+
+
+def add_executive_timeline_metrics(df):
+    df = ensure_columns(df, ["Horizon", "Date", "Item", "Category", "Owner", "Priority", "Status", "Management Attention"])
+    df = parse_dates(df, ["Date"])
+    df["Days from Today"] = (df["Date"] - TODAY).dt.days
     return df
+
+
+def add_relationship_health_metrics(df):
+    df = ensure_columns(df, [
+        "Month", "Stakeholder", "Meeting Frequency Score", "Response Timeliness Score",
+        "Open Issue Score", "Engagement Quality Score", "Overall Health Score"
+    ])
+    df = safe_to_numeric(df, [
+        "Meeting Frequency Score", "Response Timeliness Score", "Open Issue Score",
+        "Engagement Quality Score", "Overall Health Score"
+    ])
+    df["Health RAG"] = df["Overall Health Score"].apply(
+        lambda x: "Green" if pd.notna(x) and x >= 85 else ("Amber" if pd.notna(x) and x >= 70 else "Red")
+    )
+    return df
+
+
+def add_reputation_monitor_metrics(df):
+    df = ensure_columns(df, [
+        "Month", "Customer Complaints Index", "Negative Media Index", "Social Sentiment Score",
+        "Regulatory Concern Index", "Overall Reputation Score", "Trend", "Management Commentary"
+    ])
+    df = safe_to_numeric(df, [
+        "Customer Complaints Index", "Negative Media Index", "Social Sentiment Score",
+        "Regulatory Concern Index", "Overall Reputation Score"
+    ])
+    df["Reputation RAG"] = df["Overall Reputation Score"].apply(
+        lambda x: "Green" if pd.notna(x) and x >= 80 else ("Amber" if pd.notna(x) and x >= 70 else "Red")
+    )
+    return df
+
+
+def add_product_forecast_metrics(df):
+    df = ensure_columns(df, [
+        "Product", "Current Stage", "Document Quality (1-5)", "Regulatory Sensitivity (1-5)",
+        "Prior Feedback Severity (1-5)", "Days in Pipeline", "Approval Probability (%)",
+        "Expected Decision", "Recommended Action"
+    ])
+    df = safe_to_numeric(df, [
+        "Document Quality (1-5)", "Regulatory Sensitivity (1-5)",
+        "Prior Feedback Severity (1-5)", "Days in Pipeline", "Approval Probability (%)"
+    ])
+    df = parse_dates(df, ["Expected Decision"])
+    df["Forecast RAG"] = df["Approval Probability (%)"].apply(
+        lambda x: "Green" if pd.notna(x) and x >= 75 else ("Amber" if pd.notna(x) and x >= 55 else "Red")
+    )
+    return df
+
+
+def generate_ceo_pack(calendar, obligations, submissions, products, early_warning, stakeholder_intelligence, reputation, regional_reporting):
+    overdue = int((calendar.get("Auto Status", pd.Series(dtype=str)).astype(str) == "Overdue").sum())
+    critical_obligations = int((obligations.get("Criticality", pd.Series(dtype=str)).astype(str) == "Critical").sum())
+    pending_submissions = int((~submissions.get("Status", pd.Series(dtype=str)).astype(str).isin(["Submitted", "Approved", "Closed"])).sum())
+    high_signals = int(early_warning.get("Risk Level", pd.Series(dtype=str)).astype(str).isin(["High", "Critical"]).sum())
+    critical_stakeholders = int((stakeholder_intelligence.get("Priority", pd.Series(dtype=str)).astype(str) == "Critical").sum())
+    top_product = "No product forecast available"
+    if len(products) and "Approval Probability (%)" in products.columns:
+        p = products.sort_values("Approval Probability (%)").iloc[0]
+        top_product = f"{p.get('Product','')} ({p.get('Approval Probability (%)','')}% approval probability)"
+    rep_score = "N/A"
+    if len(reputation) and "Overall Reputation Score" in reputation.columns:
+        rep_score = round(float(pd.to_numeric(reputation["Overall Reputation Score"], errors="coerce").dropna().iloc[-1]), 1)
+    escalations = int((regional_reporting.get("Escalation Required", pd.Series(dtype=str)).astype(str) == "Yes").sum())
+    return f"""# Country CEO Regulatory & Public Affairs Pack
+
+## Executive status
+- Overdue regulatory items: **{overdue}**
+- Critical obligations monitored: **{critical_obligations}**
+- Pending submissions: **{pending_submissions}**
+- High regulatory early-warning signals: **{high_signals}**
+- Critical stakeholders: **{critical_stakeholders}**
+- Current reputation score: **{rep_score}**
+- Regional escalation items: **{escalations}**
+
+## Key management issue
+- Lowest-confidence product approval: **{top_product}**
+
+## Recommended management actions
+1. Close any overdue regulatory obligation before the next reporting cycle.
+2. Confirm executive sponsorship for critical MOF/ISA engagements.
+3. Review high early-warning signals and align Legal, Compliance, Product and Distribution.
+4. Validate product approval evidence packs and document quality.
+5. Escalate material issues to Regional Office with a concise narrative and action owner.
+"""
+
+
+def regulatory_copilot_answer(query, policies, early_warning, stakeholder_intelligence, meeting_intelligence, products, executive_timeline):
+    q = str(query or "").lower()
+    if not q.strip():
+        return "Please enter a question."
+    sections = []
+    if any(k in q for k in ["meeting", "mof", "isa", "stakeholder"]):
+        sections.append("## Meeting preparation")
+        if len(stakeholder_intelligence):
+            top = stakeholder_intelligence.sort_values("Stakeholder Risk Score", ascending=False).head(3)
+            for _, r in top.iterrows():
+                sections.append(f"- **{r.get('Stakeholder','')}**: issue = {r.get('Key Issue','')}; strategy = {r.get('Engagement Strategy','')}.")
+        if len(meeting_intelligence):
+            sections.append("- Review recent commitments and pending follow-ups in Meeting Intelligence before finalizing talking points.")
+    if any(k in q for k in ["risk", "q3", "regulatory", "policy"]):
+        sections.append("## Top regulatory risks")
+        combined = []
+        if len(early_warning) and "Early Warning Score" in early_warning.columns:
+            for _, r in early_warning.sort_values("Early Warning Score", ascending=False).head(3).iterrows():
+                combined.append(f"- **{r.get('Topic','')}**: probability {r.get('Probability (%)','')}%, impact {r.get('Business Impact (1-5)','')}/5. Action: {r.get('Recommended Action','')}")
+        if len(policies) and "Risk Score" in policies.columns:
+            for _, r in policies.sort_values("Risk Score", ascending=False).head(2).iterrows():
+                combined.append(f"- **{r.get('Policy / Regulation','')}**: risk score {r.get('Risk Score','')}. Action: {r.get('Recommended Action','')}")
+        sections.extend(combined or ["- No risk data available."])
+    if any(k in q for k in ["product", "approval", "delay"]):
+        sections.append("## Product approval outlook")
+        if len(products):
+            for _, r in products.sort_values("Approval Probability (%)").head(3).iterrows():
+                sections.append(f"- **{r.get('Product','')}**: {r.get('Approval Probability (%)','')}% probability; recommended action: {r.get('Recommended Action','')}.")
+    if any(k in q for k in ["today", "ceo", "attention", "priority"]):
+        sections.append("## Management attention")
+        if len(executive_timeline):
+            view = executive_timeline[executive_timeline.get("Management Attention", pd.Series(dtype=str)).astype(str).isin(["Yes", "Potential"])]
+            for _, r in view.head(5).iterrows():
+                sections.append(f"- **{r.get('Item','')}** — {r.get('Priority','')} priority, owner: {r.get('Owner','')}.")
+    if not sections:
+        sections = [
+            "## Suggested response",
+            "- Review the Executive Dashboard, Regulatory Early Warning and Stakeholder Intelligence modules.",
+            "- Identify the top issue, business impact, accountable owner and required escalation.",
+            "- Confirm that any external communication is aligned with Legal and Compliance."
+        ]
+    return "\n".join(sections)

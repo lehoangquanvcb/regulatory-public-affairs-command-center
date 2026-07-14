@@ -1,6 +1,9 @@
-﻿Action,Source,Item,Regulator,Owner,Due Date,Days to Due,Status,Risk,Required Action,Escalation,Notes
-Calendar,Calendar,Monthly solvency monitoring report,ISA,Product,2026-06-12,1,Due Soon,High,Confirm source data and QA before submission,No,Prepare CEO Office note if delayed
-Submission,Submission,New product approval dossier,MOF,Legal,2026-06-14,3,In Review,Medium,Complete official letter checklist and attachments,No,Coordinate with Compliance
-Meeting,Meeting,ISA technical working session,ISA,Public Affairs,2026-06-16,5,Planned,High,Generate briefing note and talking points,No,Use meeting brief generator
-Translation,Translation,Circular summary VN to EN,Regional Office,Public Affairs,2026-06-13,2,In Progress,Medium,Finalize English version for regional pack,No,Prioritize before weekly report
-QC,QC,Official letter to MOF,MOF,Regulatory Affairs,2026-06-11,0,Needs Review,High,Verify signature authority and legal review,Yes,Escalate before 3pm
+﻿Priority,Workstream,Item,Regulator / Audience,Owner,Due Date,Status,Risk Level,Required Action,Escalation
+P1,Document QC,Official letter to MOF requires final readiness check,MOF,Public Affairs,2026-06-11,Needs Review,High,"Verify signature authority, Legal review and attachments before 3pm",Yes
+P1,Regulatory Calendar,Monthly solvency report due tomorrow,ISA,Product,2026-06-12,Due Soon,High,Confirm source data and submit by noon tomorrow,No
+P2,Submission,New product dossier needs Legal comments,MOF,Legal,2026-06-14,In Review,Medium,Send reminder to Legal and lock document version,No
+P2,Meeting,Prepare ISA technical meeting brief,ISA,Public Affairs,2026-06-16,Planned,High,Generate brief and align talking points with CEO Office,No
+P3,Translation,Translate circular summary VN -> EN,Regional Office,Public Affairs,2026-06-13,In Progress,Medium,Finalize English version for Regional Office,No
+P2,Policy Monitoring,Monitor consultation on product approval circular,ISA,Compliance,2026-06-18,On Track,Medium,Prepare one-page impact note,No
+P1,Follow-up,Follow up open ISA interaction item,ISA,Operations,2026-06-10,Overdue,High,Call owner and update interaction log,Yes
+P3,Regional Report,Compile weekly Regional Office update,Regional Office,Public Affairs,2026-06-13,In Progress,Low,Finalize key risks and next 30-day priorities,No

@@ -1,31 +1,31 @@
 ﻿Obligation ID,Report / Obligation,Regulator,Frequency,Owner Dept,Due Date,Days to Due,Status,Quality Check,Escalation,Notes
-CAL-001,Monthly solvency monitoring report,ISA,Monthly,Product,2026-06-06,-6,Overdue,In Progress,Yes,Sample data - replace with actual obligation
-CAL-002,Quarterly capital adequacy report,MOF,Quarterly,Agency,2026-06-14,2,Due Soon,Not Started,No,Sample data - replace with actual obligation
-CAL-003,Annual audited financial statement filing,MOF,Annual,Bancassurance,2026-06-11,-1,Due Soon,Completed,No,Sample data - replace with actual obligation
-CAL-004,Product approval status update,ISA,Ad-hoc,Operations,2026-06-06,-6,Submitted,Completed,No,Sample data - replace with actual obligation
-CAL-005,Agency training approval report,ISA,Monthly,CEO Office,2026-06-06,-6,Submitted,Not Started,No,Sample data - replace with actual obligation
-CAL-006,Bancassurance compliance update,SBV,Quarterly,Legal,2026-05-30,-13,Overdue,Not Started,Yes,Sample data - replace with actual obligation
-CAL-007,Consumer complaint summary,VCA,Monthly,Compliance,2026-07-16,34,On Track,Completed,No,Sample data - replace with actual obligation
-CAL-008,AML / CFT compliance certification,MOF,Annual,Finance,2026-05-30,-13,Submitted,Completed,No,Sample data - replace with actual obligation
-CAL-009,Data privacy compliance update,MIC,Quarterly,Product,2026-07-16,34,On Track,In Progress,No,Sample data - replace with actual obligation
-CAL-010,Market conduct remediation update,ISA,Ad-hoc,Agency,2026-06-14,2,Due Soon,In Progress,No,Sample data - replace with actual obligation
-CAL-011,Regional Office regulatory update,Regional Office,Monthly,Bancassurance,2026-07-29,47,On Track,In Progress,No,Sample data - replace with actual obligation
-CAL-012,Ad-hoc ISA information request,ISA,Ad-hoc,Operations,2026-05-30,-13,Submitted,Not Started,No,Sample data - replace with actual obligation
-CAL-013,Monthly solvency monitoring report,ISA,Monthly,CEO Office,2026-06-26,14,On Track,In Progress,No,Sample data - replace with actual obligation
-CAL-014,Quarterly capital adequacy report,MOF,Quarterly,Legal,2026-06-16,4,Due Soon,Not Started,No,Sample data - replace with actual obligation
-CAL-015,Annual audited financial statement filing,MOF,Annual,Compliance,2026-06-14,2,Due Soon,In Progress,No,Sample data - replace with actual obligation
-CAL-016,Product approval status update,ISA,Ad-hoc,Finance,2026-06-06,-6,Overdue,Not Started,Yes,Sample data - replace with actual obligation
-CAL-017,Agency training approval report,ISA,Monthly,Product,2026-06-19,7,On Track,In Progress,No,Sample data - replace with actual obligation
-CAL-018,Bancassurance compliance update,SBV,Quarterly,Agency,2026-07-29,47,On Track,In Progress,No,Sample data - replace with actual obligation
-CAL-019,Consumer complaint summary,VCA,Monthly,Bancassurance,2026-05-30,-13,Submitted,Completed,No,Sample data - replace with actual obligation
-CAL-020,AML / CFT compliance certification,MOF,Annual,Operations,2026-06-06,-6,Submitted,In Progress,No,Sample data - replace with actual obligation
-CAL-021,Data privacy compliance update,MIC,Quarterly,CEO Office,2026-06-06,-6,Submitted,Completed,No,Sample data - replace with actual obligation
-CAL-022,Market conduct remediation update,ISA,Ad-hoc,Legal,2026-07-29,47,On Track,In Progress,No,Sample data - replace with actual obligation
-CAL-023,Regional Office regulatory update,Regional Office,Monthly,Compliance,2026-07-29,47,On Track,Not Started,No,Sample data - replace with actual obligation
-CAL-024,Ad-hoc ISA information request,ISA,Ad-hoc,Finance,2026-06-06,-6,Overdue,Not Started,Yes,Sample data - replace with actual obligation
-CAL-025,Monthly solvency monitoring report,ISA,Monthly,Product,2026-06-16,4,Due Soon,Not Started,No,Sample data - replace with actual obligation
-CAL-026,Quarterly capital adequacy report,MOF,Quarterly,Agency,2026-06-14,2,Due Soon,Not Started,No,Sample data - replace with actual obligation
-CAL-027,Annual audited financial statement filing,MOF,Annual,Bancassurance,2026-06-26,14,On Track,In Progress,No,Sample data - replace with actual obligation
-CAL-028,Product approval status update,ISA,Ad-hoc,Operations,2026-07-03,21,On Track,Completed,No,Sample data - replace with actual obligation
-CAL-029,Agency training approval report,ISA,Monthly,CEO Office,2026-06-19,7,On Track,Not Started,No,Sample data - replace with actual obligation
-CAL-030,Bancassurance compliance update,SBV,Quarterly,Legal,2026-06-19,7,On Track,In Progress,No,Sample data - replace with actual obligation
+CAL-001,Monthly solvency monitoring report,ISA,Monthly,Product,2026-06-06,,Overdue,In Progress,Yes,Sample data - replace with actual obligation
+CAL-002,Quarterly capital adequacy report,MOF,Quarterly,Agency,2026-06-14,,Due Soon,Not Started,No,Sample data - replace with actual obligation
+CAL-003,Annual audited financial statement filing,MOF,Annual,Bancassurance,2026-06-11,,Due Soon,Completed,No,Sample data - replace with actual obligation
+CAL-004,Product approval status update,ISA,Ad-hoc,Operations,2026-06-06,,Submitted,Completed,No,Sample data - replace with actual obligation
+CAL-005,Agency training approval report,ISA,Monthly,CEO Office,2026-06-06,,Submitted,Not Started,No,Sample data - replace with actual obligation
+CAL-006,Bancassurance compliance update,SBV,Quarterly,Legal,2026-05-30,,Overdue,Not Started,Yes,Sample data - replace with actual obligation
+CAL-007,Consumer complaint summary,VCA,Monthly,Compliance,2026-07-16,,On Track,Completed,No,Sample data - replace with actual obligation
+CAL-008,AML / CFT compliance certification,MOF,Annual,Finance,2026-05-30,,Submitted,Completed,No,Sample data - replace with actual obligation
+CAL-009,Data privacy compliance update,MIC,Quarterly,Product,2026-07-16,,On Track,In Progress,No,Sample data - replace with actual obligation
+CAL-010,Market conduct remediation update,ISA,Ad-hoc,Agency,2026-06-14,,Due Soon,In Progress,No,Sample data - replace with actual obligation
+CAL-011,Regional Office regulatory update,Regional Office,Monthly,Bancassurance,2026-07-29,,On Track,In Progress,No,Sample data - replace with actual obligation
+CAL-012,Ad-hoc ISA information request,ISA,Ad-hoc,Operations,2026-05-30,,Submitted,Not Started,No,Sample data - replace with actual obligation
+CAL-013,Monthly solvency monitoring report,ISA,Monthly,CEO Office,2026-06-26,,On Track,In Progress,No,Sample data - replace with actual obligation
+CAL-014,Quarterly capital adequacy report,MOF,Quarterly,Legal,2026-06-16,,Due Soon,Not Started,No,Sample data - replace with actual obligation
+CAL-015,Annual audited financial statement filing,MOF,Annual,Compliance,2026-06-14,,Due Soon,In Progress,No,Sample data - replace with actual obligation
+CAL-016,Product approval status update,ISA,Ad-hoc,Finance,2026-06-06,,Overdue,Not Started,Yes,Sample data - replace with actual obligation
+CAL-017,Agency training approval report,ISA,Monthly,Product,2026-06-19,,On Track,In Progress,No,Sample data - replace with actual obligation
+CAL-018,Bancassurance compliance update,SBV,Quarterly,Agency,2026-07-29,,On Track,In Progress,No,Sample data - replace with actual obligation
+CAL-019,Consumer complaint summary,VCA,Monthly,Bancassurance,2026-05-30,,Submitted,Completed,No,Sample data - replace with actual obligation
+CAL-020,AML / CFT compliance certification,MOF,Annual,Operations,2026-06-06,,Submitted,In Progress,No,Sample data - replace with actual obligation
+CAL-021,Data privacy compliance update,MIC,Quarterly,CEO Office,2026-06-06,,Submitted,Completed,No,Sample data - replace with actual obligation
+CAL-022,Market conduct remediation update,ISA,Ad-hoc,Legal,2026-07-29,,On Track,In Progress,No,Sample data - replace with actual obligation
+CAL-023,Regional Office regulatory update,Regional Office,Monthly,Compliance,2026-07-29,,On Track,Not Started,No,Sample data - replace with actual obligation
+CAL-024,Ad-hoc ISA information request,ISA,Ad-hoc,Finance,2026-06-06,,Overdue,Not Started,Yes,Sample data - replace with actual obligation
+CAL-025,Monthly solvency monitoring report,ISA,Monthly,Product,2026-06-16,,Due Soon,Not Started,No,Sample data - replace with actual obligation
+CAL-026,Quarterly capital adequacy report,MOF,Quarterly,Agency,2026-06-14,,Due Soon,Not Started,No,Sample data - replace with actual obligation
+CAL-027,Annual audited financial statement filing,MOF,Annual,Bancassurance,2026-06-26,,On Track,In Progress,No,Sample data - replace with actual obligation
+CAL-028,Product approval status update,ISA,Ad-hoc,Operations,2026-07-03,,On Track,Completed,No,Sample data - replace with actual obligation
+CAL-029,Agency training approval report,ISA,Monthly,CEO Office,2026-06-19,,On Track,Not Started,No,Sample data - replace with actual obligation
+CAL-030,Bancassurance compliance update,SBV,Quarterly,Legal,2026-06-19,,On Track,In Progress,No,Sample data - replace with actual obligation

@@ -1,30 +1,45 @@
-## \# Manulife Regulatory and Public Affairs Command Center
+# Manulife Regulatory and Public Affairs Command Center v10
 
-## 
+**Author: Le Hoang Quan**
 
-## Author: Le Hoang Quan
+Executive Regulatory Affairs, Public Affairs and Government Relations platform for Manulife Vietnam.
 
-## 
+## v10 Executive Edition
 
-## \## Key Capabilities
+- Country CEO Dashboard
+- Daily Control Tower
+- Executive Timeline
+- Regulatory Calendar and Obligation Register
+- Submission and Response Tracking
+- Product Approval Forecasting
+- Workflow and Internal Coordination
+- Regulator 360°
+- Stakeholder Intelligence
+- Relationship Health Score
+- Policy Monitoring and Regulatory Early Warning
+- Regulatory Risk Heatmap
+- Country Reputation Monitor
+- Meeting Intelligence and Brief Generator
+- Inspection Readiness
+- Executive Pack Generator
+- Regional Reporting and Public Affairs KPI
+- Regulatory Copilot (AI-lite)
+- Mobile Friendly Mode
+- Interview Mode
 
-## 
+## Run locally
 
-## \- Regulatory Calendar \& Obligation Register
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-## \- Submission \& Approval Tracking
+## Deploy to Streamlit Community Cloud
 
-## \- Stakeholder Intelligence
+- Repository: your GitHub repository
+- Branch: `main`
+- Main file path: `app.py`
 
-## \- Regulatory Early Warning
+## Data
 
-## \- Meeting Intelligence
-
-## \- Inspection Readiness
-
-## \- Executive Reporting
-
-## \- Public Affairs KPI Dashboard
-
-## \- Regional Office Reporting
-
+The package uses assumed demonstration data. Do not upload confidential customer data, non-public regulator correspondence, or personal data to a public deployment.
