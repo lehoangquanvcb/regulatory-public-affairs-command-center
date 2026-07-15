@@ -172,14 +172,28 @@ def load_all(excel_file=None):
 
 st.markdown(
     """
-<div class="top-command-banner">
-    <div class="top-command-title">Manulife Regulatory and Public Affairs Command Center - Author: Le Hoang Quan</div>
+<div class="top-command-banner" style="
+    background: linear-gradient(90deg, #14518A 0%, #0D6B63 100%);
+    padding: 18px 16px;
+    border-radius: 0 0 10px 10px;
+    margin-bottom: 10px;
+    color: white;
+    white-space: normal;
+    overflow: visible;
+">
+    <div style="font-size: 18px; font-weight: 700; line-height: 1.35;">
+        Manulife Regulatory and Public Affairs Command Center
+    </div>
+    <div style="font-size: 14px; font-weight: 600; margin-top: 4px;">
+        Author: Le Hoang Quan
+    </div>
 </div>
 """,
     unsafe_allow_html=True,
 )
 
-st.sidebar.title("Manulife Regulatory and Public Affairs Command Center - Author: Le Hoang Quan")
+st.sidebar.title("Manulife Regulatory and Public Affairs Command Center")
+st.sidebar.caption("Author: Le Hoang Quan")
 st.sidebar.markdown("**Author:** Le Hoang Quan")
 st.sidebar.caption("v10 Executive Edition")
 mobile_mode = st.sidebar.toggle("Mobile friendly mode", value=False)
