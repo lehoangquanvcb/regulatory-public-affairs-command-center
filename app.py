@@ -41,7 +41,7 @@ st.markdown(
     """
 <style>
 section[data-testid="stSidebar"] { width: 320px !important; }
-.block-container { padding-top: 1rem; padding-bottom: 2rem; }
+.block-container { padding-top: 2.5rem !important; padding-bottom: 2rem; }
 [data-testid="stMetricValue"] { font-size: 1.35rem; }
 
 /* Multi-row horizontal tabs */
@@ -61,7 +61,7 @@ button[data-baseweb="tab"] p { font-size: 12px !important; }
 
 @media (max-width: 768px) {
     section[data-testid="stSidebar"] { width: 270px !important; }
-    .block-container { padding-left: .75rem; padding-right: .75rem; }
+    .block-container { padding-top: 2.25rem !important; padding-left: .75rem; padding-right: .75rem; }
     [data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; }
     button[data-baseweb="tab"] { font-size: 11px !important; padding: 6px 7px !important; }
     h1 { font-size: 1.7rem !important; }
@@ -174,14 +174,17 @@ st.markdown(
     """
 <div class="top-command-banner" style="
     background: linear-gradient(90deg, #14518A 0%, #0D6B63 100%);
-    padding: 18px 16px;
-    border-radius: 0 0 10px 10px;
-    margin-bottom: 10px;
+    padding: 20px 16px 18px 16px;
+    border-radius: 10px;
+    margin-top: 8px;
+    margin-bottom: 12px;
     color: white;
     white-space: normal;
     overflow: visible;
+    min-height: 82px;
+    box-sizing: border-box;
 ">
-    <div style="font-size: 18px; font-weight: 700; line-height: 1.35;">
+    <div style="font-size: 18px; font-weight: 700; line-height: 1.45; padding-top: 2px;">
         Manulife Regulatory and Public Affairs Command Center
     </div>
     <div style="font-size: 14px; font-weight: 600; margin-top: 4px;">
