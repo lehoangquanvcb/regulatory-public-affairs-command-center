@@ -3,6 +3,9 @@ import pandas as pd
 from pathlib import Path
 import plotly.express as px
 import plotly.graph_objects as go
+from io import BytesIO
+import hashlib
+import time
 
 from utils.model import (
     load_csv,
@@ -87,7 +90,7 @@ section[data-testid="stSidebar"] {
 )
 
 DATA_DIR = Path(__file__).parent / "data"
-DEFAULT_MASTER = DATA_DIR / "Manulife_VN_Regulatory_Public_Affairs_Command_Center_v10_5_integrated.xlsx"
+DEFAULT_MASTER = DATA_DIR / "Manulife_VN_Regulatory_Public_Affairs_Command_Center_v10_6_performance.xlsx"
 
 
 def clean_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -96,52 +99,139 @@ def clean_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df.loc[:, ~pd.Index(df.columns).astype(str).str.match(r"^Unnamed")]
 
 
-def _reset_excel_source(excel_source):
-    if hasattr(excel_source, "seek"):
-        excel_source.seek(0)
+DATASET_SPECS = {
+    "calendar": ("regulatory_calendar.csv", "Regulatory_Calendar", add_calendar_metrics),
+    "submissions": ("submission_tracker.csv", "Submission_Tracker", add_submission_metrics),
+    "responses": ("regulatory_response_tracker.csv", "Regulatory_Response_Tracker", add_response_metrics),
+    "response_quality": ("response_quality.csv", "Response_Quality", add_response_quality_metrics),
+    "policies": ("policy_monitoring.csv", "Policy_Monitoring", add_policy_metrics),
+    "political": ("political_intelligence.csv", "Political_Intelligence", add_political_intelligence_metrics),
+    "positions": ("regulatory_positions.csv", "Regulatory_Positions", add_regulatory_position_metrics),
+    "translation": ("translation_tracker.csv", "Translation_Tracker", add_translation_metrics),
+    "bilingual": ("bilingual_document_control.csv", "Bilingual_Document_Control", add_bilingual_control_metrics),
+    "document_qc": ("document_qc_checklist.csv", "Document_QC_Checklist", add_document_qc_metrics),
+    "daily_actions": ("daily_actions.csv", "Daily_Control_Tower", add_daily_action_metrics),
+    "department_ops": ("department_operations.csv", "Department_Operations", add_department_operations_metrics),
+    "workflow": ("workflow_engine.csv", "Workflow_Engine", add_workflow_metrics),
+    "obligations": ("regulatory_obligation_register.csv", "Regulatory_Obligation_Register", add_obligation_metrics),
+    "products": ("product_approval_command_center.csv", "Product_Approval_Command_Center", add_product_command_metrics),
+    "internal": ("internal_coordination_tracker.csv", "Internal_Coordination_Tracker", add_internal_coordination_metrics),
+    "meetings": ("meeting_intelligence.csv", "Meeting_Intelligence", add_meeting_intelligence_metrics),
+    "engagements": ("engagement_lifecycle.csv", "Engagement_Lifecycle", add_engagement_lifecycle_metrics),
+    "inspection": ("inspection_readiness.csv", "Inspection_Readiness", add_inspection_readiness_metrics),
+    "interactions": ("regulator_interactions.csv", "Regulator_Interactions", None),
+    "crm": ("regulator_crm.csv", "Regulator_CRM", None),
+    "stakeholders": ("stakeholder_intelligence.csv", "Stakeholder_Intelligence", add_stakeholder_intelligence_metrics),
+    "early_warning": ("regulatory_early_warning.csv", "Regulatory_Early_Warning", add_early_warning_metrics),
+    "kpi": ("public_affairs_kpi.csv", "Public_Affairs_KPI", add_public_affairs_kpi_metrics),
+    "regional": ("regional_reporting.csv", "Regional_Reporting", add_regional_reporting_metrics),
+    "ro_requests": ("regional_office_requests.csv", "Regional_Office_Requests", add_regional_request_metrics),
+    "timeline": ("executive_timeline.csv", "Executive_Timeline", add_executive_timeline_metrics),
+    "relationship": ("relationship_health.csv", "Relationship_Health", add_relationship_health_metrics),
+    "reputation": ("reputation_monitor.csv", "Reputation_Monitor", add_reputation_monitor_metrics),
+    "product_forecast": ("product_approval_forecast.csv", "Product_Approval_Forecast", add_product_forecast_metrics),
+    "knowledge": ("knowledge_base.csv", "Knowledge_Base", None),
+    "email_templates": ("email_template_generator.csv", "Email_Template_Generator", None),
+}
 
 
-def excel_sheet_names(excel_source):
-    try:
-        _reset_excel_source(excel_source)
-        return list(pd.ExcelFile(excel_source).sheet_names)
-    except Exception:
-        return []
+@st.cache_data(show_spinner=False)
+def read_default_master_bytes(path_str: str, modified_ns: int) -> bytes:
+    """Cache the deployed default workbook bytes until the file changes."""
+    return Path(path_str).read_bytes()
 
 
-def read_source(csv_name: str, excel_source=None, sheet_name: str | None = None) -> pd.DataFrame:
-    """Read from the integrated Excel master first, with CSV as emergency fallback."""
-    csv_path = DATA_DIR / csv_name
-    try:
-        fallback = load_csv(csv_path)
-        expected = set(str(c).strip() for c in fallback.columns)
-    except Exception:
-        fallback = pd.DataFrame()
-        expected = set()
+@st.cache_data(show_spinner=False)
+def read_csv_cached(path_str: str, modified_ns: int) -> pd.DataFrame:
+    """Cache CSV fallback data; modified_ns invalidates cache when the file changes."""
+    return load_csv(Path(path_str))
 
-    if excel_source is not None and sheet_name:
-        best, best_score = None, -1
-        markers = {
-            "Due Date", "Status", "Regulator", "Risk Score", "Policy / Regulation",
-            "Current Stage", "Next Due Date", "Topic", "Stakeholder", "KPI",
-            "Overall Health Score", "Overall Reputation Score", "Approval Probability (%)",
-            "Government Priority", "Policy Issue", "Engagement ID", "Request ID", "Workstream",
-            "Political / Policy Development", "Proposed Manulife Position", "RO Request ID",
+
+@st.cache_data(show_spinner="Reading Excel master once and building the in-memory cache...")
+def load_excel_raw_bundle(file_bytes: bytes, fingerprint: str) -> dict[str, pd.DataFrame]:
+    """Open the workbook once and read every sheet as raw rows.
+
+    The fingerprint is intentionally included in the cache key. A new or edited
+    workbook therefore refreshes the cache automatically.
+    """
+    with pd.ExcelFile(BytesIO(file_bytes), engine="openpyxl") as book:
+        return {
+            sheet_name: pd.read_excel(book, sheet_name=sheet_name, header=None)
+            for sheet_name in book.sheet_names
         }
-        for header in range(0, 8):
-            try:
-                _reset_excel_source(excel_source)
-                candidate = pd.read_excel(excel_source, sheet_name=sheet_name, header=header)
-                candidate = clean_columns(candidate)
-                score = len(set(candidate.columns).intersection(expected))
-                score += 0.1 * len(set(candidate.columns).intersection(markers))
-                if score > best_score:
-                    best, best_score = candidate, score
-            except Exception:
-                continue
-        if best is not None and best_score > 0:
-            return best
+
+
+def _fallback_frame(csv_name: str) -> pd.DataFrame:
+    csv_path = DATA_DIR / csv_name
+    if not csv_path.exists():
+        return pd.DataFrame()
+    return read_csv_cached(str(csv_path), csv_path.stat().st_mtime_ns)
+
+
+def _frame_from_raw_sheet(raw: pd.DataFrame, fallback: pd.DataFrame) -> pd.DataFrame:
+    """Detect the true header row without re-opening the workbook."""
+    expected = set(str(c).strip() for c in fallback.columns)
+    markers = {
+        "Due Date", "Status", "Regulator", "Risk Score", "Policy / Regulation",
+        "Current Stage", "Next Due Date", "Topic", "Stakeholder", "KPI",
+        "Overall Health Score", "Overall Reputation Score", "Approval Probability (%)",
+        "Government Priority", "Policy Issue", "Engagement ID", "Request ID", "Workstream",
+        "Political / Policy Development", "Proposed Manulife Position", "RO Request ID",
+    }
+    best, best_score = None, -1.0
+    max_header = min(8, len(raw.index))
+    for header in range(max_header):
+        header_values = raw.iloc[header].tolist()
+        columns = [
+            str(value).strip() if pd.notna(value) else f"Unnamed: {idx}"
+            for idx, value in enumerate(header_values)
+        ]
+        candidate = raw.iloc[header + 1:].copy()
+        candidate.columns = columns
+        candidate = clean_columns(candidate)
+        score = len(set(candidate.columns).intersection(expected))
+        score += 0.1 * len(set(candidate.columns).intersection(markers))
+        if score > best_score:
+            best, best_score = candidate, score
+    if best is not None and best_score > 0:
+        return best.reset_index(drop=True)
+    return fallback.copy()
+
+
+def read_source(csv_name: str, raw_sheets: dict[str, pd.DataFrame] | None, sheet_name: str) -> pd.DataFrame:
+    fallback = _fallback_frame(csv_name)
+    if raw_sheets and sheet_name in raw_sheets:
+        return _frame_from_raw_sheet(raw_sheets[sheet_name], fallback)
     return fallback
+
+
+def _build_bundle(raw_sheets: dict[str, pd.DataFrame] | None) -> dict[str, pd.DataFrame]:
+    bundle = {}
+    for key, (csv_name, sheet_name, transformer) in DATASET_SPECS.items():
+        frame = read_source(csv_name, raw_sheets, sheet_name)
+        bundle[key] = transformer(frame) if transformer else frame
+    return bundle
+
+
+@st.cache_data(show_spinner=False)
+def build_excel_data_bundle(file_bytes: bytes, fingerprint: str):
+    raw_sheets = load_excel_raw_bundle(file_bytes, fingerprint)
+    return _build_bundle(raw_sheets), list(raw_sheets.keys())
+
+
+@st.cache_data(show_spinner=False)
+def build_csv_data_bundle(csv_signature: tuple):
+    # csv_signature is part of the cache key; actual files are read through read_csv_cached.
+    return _build_bundle(None)
+
+
+def csv_signature() -> tuple:
+    return tuple(
+        sorted(
+            (path.name, path.stat().st_mtime_ns, path.stat().st_size)
+            for path in DATA_DIR.glob("*.csv")
+        )
+    )
 
 
 def count_equal(df, col, value):
@@ -187,45 +277,10 @@ def make_timeline(df, date_col, item_col, color_col, title):
     if not len(plot):
         return None
     plot["End"] = plot[date_col] + pd.Timedelta(days=3)
-    return px.timeline(plot, x_start=date_col, x_end="End", y=item_col,
-                       color=color_col if color_col in plot.columns else None, title=title)
-
-
-def load_all(excel_file=None):
-    return {
-        "calendar": add_calendar_metrics(read_source("regulatory_calendar.csv", excel_file, "Regulatory_Calendar")),
-        "submissions": add_submission_metrics(read_source("submission_tracker.csv", excel_file, "Submission_Tracker")),
-        "responses": add_response_metrics(read_source("regulatory_response_tracker.csv", excel_file, "Regulatory_Response_Tracker")),
-        "response_quality": add_response_quality_metrics(read_source("response_quality.csv", excel_file, "Response_Quality")),
-        "policies": add_policy_metrics(read_source("policy_monitoring.csv", excel_file, "Policy_Monitoring")),
-        "political": add_political_intelligence_metrics(read_source("political_intelligence.csv", excel_file, "Political_Intelligence")),
-        "positions": add_regulatory_position_metrics(read_source("regulatory_positions.csv", excel_file, "Regulatory_Positions")),
-        "translation": add_translation_metrics(read_source("translation_tracker.csv", excel_file, "Translation_Tracker")),
-        "bilingual": add_bilingual_control_metrics(read_source("bilingual_document_control.csv", excel_file, "Bilingual_Document_Control")),
-        "document_qc": add_document_qc_metrics(read_source("document_qc_checklist.csv", excel_file, "Document_QC_Checklist")),
-        "daily_actions": add_daily_action_metrics(read_source("daily_actions.csv", excel_file, "Daily_Control_Tower")),
-        "department_ops": add_department_operations_metrics(read_source("department_operations.csv", excel_file, "Department_Operations")),
-        "workflow": add_workflow_metrics(read_source("workflow_engine.csv", excel_file, "Workflow_Engine")),
-        "obligations": add_obligation_metrics(read_source("regulatory_obligation_register.csv", excel_file, "Regulatory_Obligation_Register")),
-        "products": add_product_command_metrics(read_source("product_approval_command_center.csv", excel_file, "Product_Approval_Command_Center")),
-        "internal": add_internal_coordination_metrics(read_source("internal_coordination_tracker.csv", excel_file, "Internal_Coordination_Tracker")),
-        "meetings": add_meeting_intelligence_metrics(read_source("meeting_intelligence.csv", excel_file, "Meeting_Intelligence")),
-        "engagements": add_engagement_lifecycle_metrics(read_source("engagement_lifecycle.csv", excel_file, "Engagement_Lifecycle")),
-        "inspection": add_inspection_readiness_metrics(read_source("inspection_readiness.csv", excel_file, "Inspection_Readiness")),
-        "interactions": read_source("regulator_interactions.csv", excel_file, "Regulator_Interactions"),
-        "crm": read_source("regulator_crm.csv", excel_file, "Regulator_CRM"),
-        "stakeholders": add_stakeholder_intelligence_metrics(read_source("stakeholder_intelligence.csv", excel_file, "Stakeholder_Intelligence")),
-        "early_warning": add_early_warning_metrics(read_source("regulatory_early_warning.csv", excel_file, "Regulatory_Early_Warning")),
-        "kpi": add_public_affairs_kpi_metrics(read_source("public_affairs_kpi.csv", excel_file, "Public_Affairs_KPI")),
-        "regional": add_regional_reporting_metrics(read_source("regional_reporting.csv", excel_file, "Regional_Reporting")),
-        "ro_requests": add_regional_request_metrics(read_source("regional_office_requests.csv", excel_file, "Regional_Office_Requests")),
-        "timeline": add_executive_timeline_metrics(read_source("executive_timeline.csv", excel_file, "Executive_Timeline")),
-        "relationship": add_relationship_health_metrics(read_source("relationship_health.csv", excel_file, "Relationship_Health")),
-        "reputation": add_reputation_monitor_metrics(read_source("reputation_monitor.csv", excel_file, "Reputation_Monitor")),
-        "product_forecast": add_product_forecast_metrics(read_source("product_approval_forecast.csv", excel_file, "Product_Approval_Forecast")),
-        "knowledge": read_source("knowledge_base.csv", excel_file, "Knowledge_Base"),
-        "email_templates": read_source("email_template_generator.csv", excel_file, "Email_Template_Generator"),
-    }
+    return px.timeline(
+        plot, x_start=date_col, x_end="End", y=item_col,
+        color=color_col if color_col in plot.columns else None, title=title
+    )
 
 
 st.markdown(
@@ -243,35 +298,48 @@ st.sidebar.markdown("""
 Manulife Regulatory & Public Affairs
 </div>
 <div style="font-size:11.5px;opacity:.8;margin-bottom:8px;">
-Author: Le Hoang Quan<br>v10.5 Integrated Master Edition
+Author: Le Hoang Quan<br>v10.6 Performance Edition
 </div>
 """, unsafe_allow_html=True)
 mobile_mode = st.sidebar.toggle("Mobile friendly mode", value=False)
 uploaded_excel = st.sidebar.file_uploader("Upload latest Excel master", type=["xlsx"])
 
 if uploaded_excel is not None:
-    excel_source = uploaded_excel
+    master_bytes = uploaded_excel.getvalue()
     source_mode = "Uploaded Excel"
     source_name = uploaded_excel.name
 elif DEFAULT_MASTER.exists():
-    excel_source = DEFAULT_MASTER
+    master_bytes = read_default_master_bytes(str(DEFAULT_MASTER), DEFAULT_MASTER.stat().st_mtime_ns)
     source_mode = "Default Excel master"
     source_name = DEFAULT_MASTER.name
 else:
-    excel_source = None
+    master_bytes = None
     source_mode = "CSV fallback"
     source_name = "data/*.csv"
 
-D = load_all(excel_source)
+load_started = time.perf_counter()
+if master_bytes is not None:
+    workbook_fingerprint = hashlib.sha256(master_bytes).hexdigest()[:12]
+    D, sheet_names = build_excel_data_bundle(master_bytes, workbook_fingerprint)
+else:
+    workbook_fingerprint = "csv-fallback"
+    D = build_csv_data_bundle(csv_signature())
+    sheet_names = []
+load_elapsed_ms = round((time.perf_counter() - load_started) * 1000)
+
 validation = validate_data_bundle(D)
 data_quality_score = calculate_data_quality_score(validation)
-sheet_names = excel_sheet_names(excel_source) if excel_source is not None else []
 
 st.sidebar.markdown("---")
 st.sidebar.caption(f"**Data source:** {source_mode}")
 st.sidebar.caption(f"**File:** {source_name}")
 st.sidebar.caption(f"**Sheets detected:** {len(sheet_names)}")
 st.sidebar.caption(f"**Data quality:** {data_quality_score}%")
+st.sidebar.caption(f"**Cached load time:** {load_elapsed_ms} ms")
+st.sidebar.caption(f"**Data fingerprint:** {workbook_fingerprint}")
+if st.sidebar.button("Refresh data cache", use_container_width=True):
+    st.cache_data.clear()
+    st.rerun()
 with st.sidebar.expander("Data validation details"):
     st.dataframe(validation, use_container_width=True, hide_index=True)
     if excel_source is None:

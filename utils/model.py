@@ -1,3 +1,4 @@
+MODEL_VERSION = "10.6 Performance Edition"
 
 import pandas as pd
 

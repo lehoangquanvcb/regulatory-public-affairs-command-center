@@ -1,8 +1,8 @@
-# Manulife Regulatory and Public Affairs Command Center — v10.5 Integrated Master Edition
+# Manulife Regulatory and Public Affairs Command Center — v10.6 Performance Edition
 
 **Author:** Le Hoang Quan
 
-V10.5 keeps the strongest functionality and visual analytics from prior versions, removes Interview Mode, consolidates overlapping dashboard modules into 15 navigation items, and makes the Excel master workbook the single source of truth.
+V10.6 keeps the strongest functionality and visual analytics from prior versions, removes Interview Mode, consolidates overlapping dashboard modules into 15 navigation items, and makes the Excel master workbook the single source of truth while caching the workbook in memory for faster reruns.
 
 ## Data-source priority
 
@@ -12,7 +12,7 @@ V10.5 keeps the strongest functionality and visual analytics from prior versions
 
 ## Daily operating workflow
 
-1. Update the relevant sheets in `Manulife_VN_Regulatory_Public_Affairs_Command_Center_v10_5_integrated.xlsx`.
+1. Update the relevant sheets in `Manulife_VN_Regulatory_Public_Affairs_Command_Center_v10_6_performance.xlsx`.
 2. Save the workbook.
 3. Upload it in the Streamlit sidebar, or replace the default workbook in `data/` and redeploy.
 4. Review the Data Source and Data Validation section in the sidebar.
@@ -36,3 +36,13 @@ V10.5 keeps the strongest functionality and visual analytics from prior versions
 15. Knowledge Base, Copilot & Templates
 
 All included records are illustrative and must not be treated as actual Manulife information.
+
+
+## V10.6 performance architecture
+
+- Opens the Excel workbook once per file fingerprint instead of once per dataset.
+- Caches the raw workbook sheets and transformed dashboard bundle with `st.cache_data`.
+- Automatically invalidates cache when uploaded workbook bytes or the deployed master file change.
+- Keeps CSV files as an emergency fallback only.
+- Shows cached load time, workbook fingerprint and a manual **Refresh data cache** control in the sidebar.
+- Retains the 15 consolidated modules, JD-fit analytics, narrow sidebar, mobile mode, banner and author branding from V10.5.
