@@ -322,7 +322,10 @@ def add_response_metrics(df):
     return df
 
 def add_product_command_metrics(df):
-    df = ensure_columns(df, ["Request Date", "Submitted Date", "Target Approval Date", "Actual Approval Date", "Current Stage", "Approval Risk"])
+    df = df.copy()
+    if "Product" not in df.columns and "Product Name" in df.columns:
+        df["Product"] = df["Product Name"]
+    df = ensure_columns(df, ["Product", "Request Date", "Submitted Date", "Target Approval Date", "Actual Approval Date", "Current Stage", "Approval Risk"])
     df = parse_dates(df, ["Request Date", "Submitted Date", "Target Approval Date", "Actual Approval Date"])
     df["Days in Process"] = (df["Actual Approval Date"].fillna(TODAY) - df["Request Date"]).dt.days
     df["Days to Target"] = (df["Target Approval Date"] - TODAY).dt.days
@@ -576,3 +579,218 @@ def regulatory_copilot_answer(query, policies, early_warning, stakeholder_intell
             "- Confirm that any external communication is aligned with Legal and Compliance."
         ]
     return "\n".join(sections)
+
+
+# =============================
+# v10.3 JD-alignment modules
+# =============================
+
+def add_political_intelligence_metrics(df):
+    df = ensure_columns(df, [
+        "Issue ID", "Government Priority", "Political / Policy Development", "Legislative Stage",
+        "Policy Direction", "Political Sensitivity (1-5)", "Business Impact (1-5)",
+        "Urgency (1-5)", "Manulife Exposure", "EMT Relevance", "Advocacy Window", "Owner",
+        "Recommended Action"
+    ])
+    df = safe_to_numeric(df, ["Political Sensitivity (1-5)", "Business Impact (1-5)", "Urgency (1-5)"])
+    df["Strategic Significance Score"] = (
+        df["Political Sensitivity (1-5)"].fillna(0) *
+        df["Business Impact (1-5)"].fillna(0) *
+        df["Urgency (1-5)"].fillna(0) / 5
+    ).round(2)
+    df["EMT RAG"] = df["Strategic Significance Score"].apply(
+        lambda x: "Red" if pd.notna(x) and x >= 18 else ("Amber" if pd.notna(x) and x >= 10 else "Green")
+    )
+    return df
+
+
+def add_regulatory_position_metrics(df):
+    df = ensure_columns(df, [
+        "Position ID", "Policy Issue", "Regulatory Objective", "Manulife Business Impact",
+        "Customer / Market Impact", "Proposed Manulife Position", "Supporting Evidence",
+        "Key Message", "Engagement Channel", "Internal Approval Status", "Owner", "Due Date"
+    ])
+    df = parse_dates(df, ["Due Date"])
+    if "Due Date" in df.columns:
+        df["Days to Due"] = (df["Due Date"] - TODAY).dt.days
+    df["Position Readiness"] = df["Internal Approval Status"].astype(str).map({
+        "Approved": "Ready", "Management review": "Near Ready", "Legal review": "Near Ready",
+        "Drafting": "In Development"
+    }).fillna("In Development")
+    return df
+
+
+def add_engagement_lifecycle_metrics(df):
+    df = ensure_columns(df, [
+        "Engagement ID", "Stakeholder", "Topic", "Planned Date", "Stage", "Objective Approved",
+        "Logistics Confirmed", "Brief Prepared", "Talking Points Approved", "Meeting Completed",
+        "Minutes Issued", "Open Commitments", "Follow-up Due", "Owner"
+    ])
+    df = parse_dates(df, ["Planned Date", "Follow-up Due"])
+    df = safe_to_numeric(df, ["Open Commitments"])
+    binary_cols = ["Objective Approved", "Logistics Confirmed", "Brief Prepared", "Talking Points Approved", "Meeting Completed", "Minutes Issued"]
+    for col in binary_cols:
+        df[col] = df[col].astype(str)
+    df["Lifecycle Completion (%)"] = (
+        sum((df[col].str.lower() == "yes").astype(int) for col in binary_cols) / len(binary_cols) * 100
+    ).round(0)
+    if "Follow-up Due" in df.columns:
+        df["Follow-up Days"] = (df["Follow-up Due"] - TODAY).dt.days
+    df["Follow-up RAG"] = df.apply(
+        lambda r: "Red" if pd.notna(r.get("Follow-up Days")) and r.get("Follow-up Days") < 0 and r.get("Open Commitments", 0) > 0
+        else ("Amber" if r.get("Open Commitments", 0) > 0 else "Green"), axis=1
+    )
+    return df
+
+
+def add_response_quality_metrics(df):
+    df = ensure_columns(df, [
+        "Request ID", "Regulator", "Request Topic", "Internal Function", "Due Date",
+        "Completeness (1-5)", "Accuracy (1-5)", "Legal Consistency (1-5)",
+        "Regulatory Relevance (1-5)", "Evidence Quality (1-5)", "Formatting (1-5)",
+        "Rework Required", "Status", "Owner"
+    ])
+    df = parse_dates(df, ["Due Date"])
+    score_cols = ["Completeness (1-5)", "Accuracy (1-5)", "Legal Consistency (1-5)",
+                  "Regulatory Relevance (1-5)", "Evidence Quality (1-5)", "Formatting (1-5)"]
+    df = safe_to_numeric(df, score_cols)
+    df["Response Quality Score"] = (df[score_cols].mean(axis=1) * 20).round(1)
+    if "Due Date" in df.columns:
+        df["Days to Due"] = (df["Due Date"] - TODAY).dt.days
+    df["Quality RAG"] = df["Response Quality Score"].apply(
+        lambda x: "Green" if pd.notna(x) and x >= 85 else ("Amber" if pd.notna(x) and x >= 70 else "Red")
+    )
+    return df
+
+
+def add_department_operations_metrics(df):
+    df = ensure_columns(df, [
+        "Task ID", "Workstream", "Task", "Owner", "Due Date", "Status", "Priority", "SLA Days",
+        "Expense / Invoice Status", "Filing Status"
+    ])
+    df = parse_dates(df, ["Due Date"])
+    df = safe_to_numeric(df, ["SLA Days"])
+    if "Due Date" in df.columns:
+        df["Days to Due"] = (df["Due Date"] - TODAY).dt.days
+    df["Operations RAG"] = df.apply(
+        lambda r: "Red" if str(r.get("Status", "")) == "Overdue" or (pd.notna(r.get("Days to Due")) and r.get("Days to Due") < 0)
+        else ("Amber" if str(r.get("Priority", "")) == "High" and str(r.get("Status", "")) not in ["Done", "Closed"] else "Green"), axis=1
+    )
+    return df
+
+
+def add_regional_request_metrics(df):
+    df = ensure_columns(df, [
+        "RO Request ID", "Requestor", "Request Type", "Received Date", "Reporting Period",
+        "Internal Contributors", "Due Date", "Review Status", "Regional Feedback",
+        "Resubmission Required", "Final Submission Date", "Owner"
+    ])
+    df = parse_dates(df, ["Received Date", "Due Date", "Final Submission Date"])
+    if "Due Date" in df.columns:
+        df["Days to Due"] = (df["Due Date"] - TODAY).dt.days
+    df["RO RAG"] = df.apply(
+        lambda r: "Red" if pd.notna(r.get("Days to Due")) and r.get("Days to Due") < 0 and str(r.get("Review Status", "")) not in ["Submitted", "Closed"]
+        else ("Amber" if str(r.get("Resubmission Required", "")) == "Yes" or (pd.notna(r.get("Days to Due")) and r.get("Days to Due") <= 7) else "Green"), axis=1
+    )
+    return df
+
+
+def add_bilingual_control_metrics(df):
+    df = ensure_columns(df, [
+        "Document ID", "Document", "Source Language", "Target Language",
+        "Regulatory Terminology Checked", "Legal Review Required", "Bilingual Consistency Score",
+        "Version", "Reviewer", "Confidentiality", "Due Date", "Status"
+    ])
+    df = parse_dates(df, ["Due Date"])
+    df = safe_to_numeric(df, ["Bilingual Consistency Score"])
+    if "Due Date" in df.columns:
+        df["Days to Due"] = (df["Due Date"] - TODAY).dt.days
+    df["Bilingual RAG"] = df["Bilingual Consistency Score"].apply(
+        lambda x: "Green" if pd.notna(x) and x >= 90 else ("Amber" if pd.notna(x) and x >= 80 else "Red")
+    )
+    return df
+
+
+def generate_emt_insight(issue_row):
+    return f"""## EMT Strategic Insight
+
+**What happened?**  
+{issue_row.get('Political / Policy Development','')}
+
+**Why it matters?**  
+Business impact: {issue_row.get('Business Impact (1-5)','')}/5; political sensitivity: {issue_row.get('Political Sensitivity (1-5)','')}/5.
+
+**Manulife exposure**  
+{issue_row.get('Manulife Exposure','')}
+
+**Management decision / direction required**  
+{issue_row.get('Recommended Action','')}
+
+**Public Affairs next step**  
+Use the remaining advocacy window ({issue_row.get('Advocacy Window','')}) to align evidence, regulatory position and stakeholder engagement.
+"""
+
+
+# =============================
+# v10.5 integrated Excel master validation
+# =============================
+
+DATASET_REQUIREMENTS = {
+    "calendar": ["Due Date", "Status"],
+    "submissions": ["Submission Due Date", "Status"],
+    "responses": ["Response Due Date", "Status"],
+    "response_quality": ["Request ID", "Internal Function", "Completeness (1-5)", "Accuracy (1-5)"],
+    "policies": ["Policy / Regulation", "Probability (%)", "Business Impact (1-5)"],
+    "political": ["Political / Policy Development", "Political Sensitivity (1-5)", "Business Impact (1-5)"],
+    "positions": ["Policy Issue", "Regulatory Objective", "Proposed Manulife Position"],
+    "translation": ["Due Date", "Status"],
+    "bilingual": ["Document ID", "Document", "Bilingual Consistency Score"],
+    "document_qc": ["Due Date"],
+    "daily_actions": ["Due Date", "Priority", "Status"],
+    "department_ops": ["Task ID", "Workstream", "Due Date", "Status"],
+    "workflow": ["Workflow Name", "Stage", "Status"],
+    "obligations": ["Next Due Date", "Criticality"],
+    "products": ["Product", "Current Stage"],
+    "internal": ["Due Date", "Status"],
+    "meetings": ["Meeting ID", "Regulator"],
+    "engagements": ["Engagement ID", "Stakeholder", "Planned Date"],
+    "inspection": ["Area", "Readiness Score (0-100)"],
+    "interactions": ["Regulator"],
+    "crm": ["Regulator", "Relationship Strength (1-5)"],
+    "stakeholders": ["Stakeholder", "Influence (1-5)", "Relationship (1-5)"],
+    "early_warning": ["Topic", "Probability (%)", "Business Impact (1-5)"],
+    "kpi": ["KPI", "Target", "Actual"],
+    "regional": ["Topic", "Impact"],
+    "ro_requests": ["RO Request ID", "Due Date", "Review Status"],
+    "timeline": ["Item", "Date"],
+    "relationship": ["Stakeholder", "Overall Health Score"],
+    "reputation": ["Overall Reputation Score"],
+    "product_forecast": ["Product", "Approval Probability (%)"],
+    "knowledge": ["Topic / Regulation"],
+    "email_templates": ["Use Case"],
+}
+
+
+def validate_data_bundle(data_bundle):
+    """Return dataset-level validation results for the integrated Excel master."""
+    rows = []
+    for key, required_cols in DATASET_REQUIREMENTS.items():
+        df = data_bundle.get(key, pd.DataFrame())
+        missing = [c for c in required_cols if c not in df.columns]
+        row_count = int(len(df))
+        non_empty = row_count > 0
+        status = "Green" if non_empty and not missing else ("Amber" if non_empty else "Red")
+        rows.append({
+            "Dataset": key,
+            "Rows": row_count,
+            "Missing Required Columns": ", ".join(missing),
+            "Status": status,
+        })
+    return pd.DataFrame(rows)
+
+
+def calculate_data_quality_score(validation_df):
+    if validation_df is None or not len(validation_df):
+        return 0.0
+    weights = validation_df["Status"].astype(str).map({"Green": 1.0, "Amber": 0.5, "Red": 0.0}).fillna(0)
+    return round(float(weights.mean() * 100), 1)

@@ -1,45 +1,38 @@
-# Manulife Regulatory and Public Affairs Command Center v10
+# Manulife Regulatory and Public Affairs Command Center — v10.5 Integrated Master Edition
 
-**Author: Le Hoang Quan**
+**Author:** Le Hoang Quan
 
-Executive Regulatory Affairs, Public Affairs and Government Relations platform for Manulife Vietnam.
+V10.5 keeps the strongest functionality and visual analytics from prior versions, removes Interview Mode, consolidates overlapping dashboard modules into 15 navigation items, and makes the Excel master workbook the single source of truth.
 
-## v10 Executive Edition
+## Data-source priority
 
-- Country CEO Dashboard
-- Daily Control Tower
-- Executive Timeline
-- Regulatory Calendar and Obligation Register
-- Submission and Response Tracking
-- Product Approval Forecasting
-- Workflow and Internal Coordination
-- Regulator 360°
-- Stakeholder Intelligence
-- Relationship Health Score
-- Policy Monitoring and Regulatory Early Warning
-- Regulatory Risk Heatmap
-- Country Reputation Monitor
-- Meeting Intelligence and Brief Generator
-- Inspection Readiness
-- Executive Pack Generator
-- Regional Reporting and Public Affairs KPI
-- Regulatory Copilot (AI-lite)
-- Mobile Friendly Mode
-- Interview Mode
+1. Excel workbook uploaded through the Streamlit sidebar
+2. Default integrated master workbook in `data/`
+3. CSV fallback files, used only if the corresponding Excel sheet is unavailable
 
-## Run locally
+## Daily operating workflow
 
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
+1. Update the relevant sheets in `Manulife_VN_Regulatory_Public_Affairs_Command_Center_v10_5_integrated.xlsx`.
+2. Save the workbook.
+3. Upload it in the Streamlit sidebar, or replace the default workbook in `data/` and redeploy.
+4. Review the Data Source and Data Validation section in the sidebar.
 
-## Deploy to Streamlit Community Cloud
+## Consolidated dashboard modules
 
-- Repository: your GitHub repository
-- Branch: `main`
-- Main file path: `app.py`
+1. Country CEO Dashboard
+2. Daily & Department Operations
+3. Calendar & Obligations
+4. Submission, Response & Quality
+5. Product Approval
+6. Regulatory & Political Intelligence
+7. Regulatory Position & Advocacy
+8. Regulator & Stakeholder Intelligence
+9. Engagement & Meeting Intelligence
+10. Internal Coordination & Actions
+11. Document QC, Translation & Filing
+12. Inspection Readiness
+13. Reputation & Public Issues
+14. Executive & Regional Reporting
+15. Knowledge Base, Copilot & Templates
 
-## Data
-
-The package uses assumed demonstration data. Do not upload confidential customer data, non-public regulator correspondence, or personal data to a public deployment.
+All included records are illustrative and must not be treated as actual Manulife information.

@@ -27,9 +27,19 @@ from utils.model import (
     add_relationship_health_metrics,
     add_reputation_monitor_metrics,
     add_product_forecast_metrics,
+    add_political_intelligence_metrics,
+    add_regulatory_position_metrics,
+    add_engagement_lifecycle_metrics,
+    add_response_quality_metrics,
+    add_department_operations_metrics,
+    add_regional_request_metrics,
+    add_bilingual_control_metrics,
     generate_meeting_brief,
     generate_ceo_pack,
+    generate_emt_insight,
     regulatory_copilot_answer,
+    validate_data_bundle,
+    calculate_data_quality_score,
 )
 
 st.set_page_config(
@@ -46,54 +56,30 @@ section[data-testid="stSidebar"] {
     min-width: 232px !important;
 }
 .block-container {
-    padding-top: 2.6rem !important;
+    padding-top: 2.2rem !important;
     padding-bottom: 2rem;
+    max-width: 1550px;
 }
-[data-testid="stMetricValue"] {
-    font-size: 1.3rem;
-}
+[data-testid="stMetricValue"] { font-size: 1.30rem; }
+[data-testid="stMetricLabel"] { font-size: .83rem; }
 .top-command-banner {
     background: linear-gradient(90deg, #14518A 0%, #0D6B63 100%);
-    padding: 20px 16px 18px 16px;
+    padding: 18px 16px;
     border-radius: 10px;
-    margin-top: 8px;
-    margin-bottom: 12px;
+    margin: 6px 0 12px 0;
     color: white;
-    white-space: normal;
-    overflow: visible;
-    min-height: 82px;
+    min-height: 80px;
     box-sizing: border-box;
 }
-.top-command-title {
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1.45;
-    padding-top: 2px;
-}
-.top-command-author {
-    font-size: 14px;
-    font-weight: 600;
-    margin-top: 4px;
-}
-[data-testid="stDataFrame"] {
-    border-radius: 8px;
-}
+.top-command-title { font-size: 18px; font-weight: 700; line-height: 1.4; }
+.top-command-author { font-size: 14px; font-weight: 600; margin-top: 5px; }
+.small-note { font-size: .82rem; opacity: .8; }
 @media (max-width: 768px) {
-    section[data-testid="stSidebar"] {
-        width: 210px !important;
-        min-width: 210px !important;
-    }
-    .block-container {
-        padding-top: 2.25rem !important;
-        padding-left: .7rem;
-        padding-right: .7rem;
-    }
-    [data-testid="column"] {
-        width: 100% !important;
-        flex: 1 1 100% !important;
-    }
+    section[data-testid="stSidebar"] { width: 215px !important; min-width: 215px !important; }
+    .block-container { padding-top: 2rem !important; padding-left: .7rem; padding-right: .7rem; }
+    [data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; }
     h1 { font-size: 1.65rem !important; }
-    h2 { font-size: 1.28rem !important; }
+    h2 { font-size: 1.25rem !important; }
 }
 </style>
 """,
@@ -101,6 +87,7 @@ section[data-testid="stSidebar"] {
 )
 
 DATA_DIR = Path(__file__).parent / "data"
+DEFAULT_MASTER = DATA_DIR / "Manulife_VN_Regulatory_Public_Affairs_Command_Center_v10_5_integrated.xlsx"
 
 
 def clean_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -109,7 +96,21 @@ def clean_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df.loc[:, ~pd.Index(df.columns).astype(str).str.match(r"^Unnamed")]
 
 
-def read_source(csv_name: str, excel_file=None, sheet_name: str | None = None) -> pd.DataFrame:
+def _reset_excel_source(excel_source):
+    if hasattr(excel_source, "seek"):
+        excel_source.seek(0)
+
+
+def excel_sheet_names(excel_source):
+    try:
+        _reset_excel_source(excel_source)
+        return list(pd.ExcelFile(excel_source).sheet_names)
+    except Exception:
+        return []
+
+
+def read_source(csv_name: str, excel_source=None, sheet_name: str | None = None) -> pd.DataFrame:
+    """Read from the integrated Excel master first, with CSV as emergency fallback."""
     csv_path = DATA_DIR / csv_name
     try:
         fallback = load_csv(csv_path)
@@ -118,17 +119,19 @@ def read_source(csv_name: str, excel_file=None, sheet_name: str | None = None) -
         fallback = pd.DataFrame()
         expected = set()
 
-    if excel_file is not None and sheet_name:
+    if excel_source is not None and sheet_name:
         best, best_score = None, -1
         markers = {
             "Due Date", "Status", "Regulator", "Risk Score", "Policy / Regulation",
             "Current Stage", "Next Due Date", "Topic", "Stakeholder", "KPI",
             "Overall Health Score", "Overall Reputation Score", "Approval Probability (%)",
+            "Government Priority", "Policy Issue", "Engagement ID", "Request ID", "Workstream",
+            "Political / Policy Development", "Proposed Manulife Position", "RO Request ID",
         }
         for header in range(0, 8):
             try:
-                excel_file.seek(0)
-                candidate = pd.read_excel(excel_file, sheet_name=sheet_name, header=header)
+                _reset_excel_source(excel_source)
+                candidate = pd.read_excel(excel_source, sheet_name=sheet_name, header=header)
                 candidate = clean_columns(candidate)
                 score = len(set(candidate.columns).intersection(expected))
                 score += 0.1 * len(set(candidate.columns).intersection(markers))
@@ -177,20 +180,37 @@ def latest_value(df, col, default=0):
     return round(float(values.iloc[-1]), 1) if len(values) else default
 
 
+def make_timeline(df, date_col, item_col, color_col, title):
+    if not all(c in df.columns for c in [date_col, item_col]):
+        return None
+    plot = df.copy().dropna(subset=[date_col])
+    if not len(plot):
+        return None
+    plot["End"] = plot[date_col] + pd.Timedelta(days=3)
+    return px.timeline(plot, x_start=date_col, x_end="End", y=item_col,
+                       color=color_col if color_col in plot.columns else None, title=title)
+
+
 def load_all(excel_file=None):
     return {
         "calendar": add_calendar_metrics(read_source("regulatory_calendar.csv", excel_file, "Regulatory_Calendar")),
         "submissions": add_submission_metrics(read_source("submission_tracker.csv", excel_file, "Submission_Tracker")),
         "responses": add_response_metrics(read_source("regulatory_response_tracker.csv", excel_file, "Regulatory_Response_Tracker")),
+        "response_quality": add_response_quality_metrics(read_source("response_quality.csv", excel_file, "Response_Quality")),
         "policies": add_policy_metrics(read_source("policy_monitoring.csv", excel_file, "Policy_Monitoring")),
+        "political": add_political_intelligence_metrics(read_source("political_intelligence.csv", excel_file, "Political_Intelligence")),
+        "positions": add_regulatory_position_metrics(read_source("regulatory_positions.csv", excel_file, "Regulatory_Positions")),
         "translation": add_translation_metrics(read_source("translation_tracker.csv", excel_file, "Translation_Tracker")),
+        "bilingual": add_bilingual_control_metrics(read_source("bilingual_document_control.csv", excel_file, "Bilingual_Document_Control")),
         "document_qc": add_document_qc_metrics(read_source("document_qc_checklist.csv", excel_file, "Document_QC_Checklist")),
         "daily_actions": add_daily_action_metrics(read_source("daily_actions.csv", excel_file, "Daily_Control_Tower")),
+        "department_ops": add_department_operations_metrics(read_source("department_operations.csv", excel_file, "Department_Operations")),
         "workflow": add_workflow_metrics(read_source("workflow_engine.csv", excel_file, "Workflow_Engine")),
         "obligations": add_obligation_metrics(read_source("regulatory_obligation_register.csv", excel_file, "Regulatory_Obligation_Register")),
         "products": add_product_command_metrics(read_source("product_approval_command_center.csv", excel_file, "Product_Approval_Command_Center")),
         "internal": add_internal_coordination_metrics(read_source("internal_coordination_tracker.csv", excel_file, "Internal_Coordination_Tracker")),
         "meetings": add_meeting_intelligence_metrics(read_source("meeting_intelligence.csv", excel_file, "Meeting_Intelligence")),
+        "engagements": add_engagement_lifecycle_metrics(read_source("engagement_lifecycle.csv", excel_file, "Engagement_Lifecycle")),
         "inspection": add_inspection_readiness_metrics(read_source("inspection_readiness.csv", excel_file, "Inspection_Readiness")),
         "interactions": read_source("regulator_interactions.csv", excel_file, "Regulator_Interactions"),
         "crm": read_source("regulator_crm.csv", excel_file, "Regulator_CRM"),
@@ -198,11 +218,13 @@ def load_all(excel_file=None):
         "early_warning": add_early_warning_metrics(read_source("regulatory_early_warning.csv", excel_file, "Regulatory_Early_Warning")),
         "kpi": add_public_affairs_kpi_metrics(read_source("public_affairs_kpi.csv", excel_file, "Public_Affairs_KPI")),
         "regional": add_regional_reporting_metrics(read_source("regional_reporting.csv", excel_file, "Regional_Reporting")),
+        "ro_requests": add_regional_request_metrics(read_source("regional_office_requests.csv", excel_file, "Regional_Office_Requests")),
         "timeline": add_executive_timeline_metrics(read_source("executive_timeline.csv", excel_file, "Executive_Timeline")),
         "relationship": add_relationship_health_metrics(read_source("relationship_health.csv", excel_file, "Relationship_Health")),
         "reputation": add_reputation_monitor_metrics(read_source("reputation_monitor.csv", excel_file, "Reputation_Monitor")),
         "product_forecast": add_product_forecast_metrics(read_source("product_approval_forecast.csv", excel_file, "Product_Approval_Forecast")),
         "knowledge": read_source("knowledge_base.csv", excel_file, "Knowledge_Base"),
+        "email_templates": read_source("email_template_generator.csv", excel_file, "Email_Template_Generator"),
     }
 
 
@@ -216,372 +238,335 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.sidebar.markdown(
-    """
+st.sidebar.markdown("""
 <div style="font-size:15px;font-weight:700;line-height:1.25;margin-bottom:3px;">
 Manulife Regulatory & Public Affairs
 </div>
-<div style="font-size:11px;opacity:.8;margin-bottom:8px;">
-Author: Le Hoang Quan<br>v10.2 Full-Inheritance JD-Fit Edition
+<div style="font-size:11.5px;opacity:.8;margin-bottom:8px;">
+Author: Le Hoang Quan<br>v10.5 Integrated Master Edition
 </div>
-""",
-    unsafe_allow_html=True,
-)
-
+""", unsafe_allow_html=True)
 mobile_mode = st.sidebar.toggle("Mobile friendly mode", value=False)
-uploaded_excel = st.sidebar.file_uploader("Upload Excel master tracker", type=["xlsx"])
-if uploaded_excel:
-    st.sidebar.success("Excel master uploaded.")
-else:
-    st.sidebar.caption("Using built-in assumed demo data.")
+uploaded_excel = st.sidebar.file_uploader("Upload latest Excel master", type=["xlsx"])
 
-D = load_all(uploaded_excel)
-calendar = D["calendar"]
-submissions = D["submissions"]
-responses = D["responses"]
-policies = D["policies"]
-translation = D["translation"]
-document_qc = D["document_qc"]
-daily_actions = D["daily_actions"]
-workflow = D["workflow"]
-obligations = D["obligations"]
-products = D["products"]
-internal = D["internal"]
-meetings = D["meetings"]
-inspection = D["inspection"]
-interactions = D["interactions"]
-crm = D["crm"]
-stakeholders = D["stakeholders"]
-early_warning = D["early_warning"]
-kpi = D["kpi"]
-regional = D["regional"]
-timeline = D["timeline"]
-relationship = D["relationship"]
-reputation = D["reputation"]
-product_forecast = D["product_forecast"]
-knowledge = D["knowledge"]
+if uploaded_excel is not None:
+    excel_source = uploaded_excel
+    source_mode = "Uploaded Excel"
+    source_name = uploaded_excel.name
+elif DEFAULT_MASTER.exists():
+    excel_source = DEFAULT_MASTER
+    source_mode = "Default Excel master"
+    source_name = DEFAULT_MASTER.name
+else:
+    excel_source = None
+    source_mode = "CSV fallback"
+    source_name = "data/*.csv"
+
+D = load_all(excel_source)
+validation = validate_data_bundle(D)
+data_quality_score = calculate_data_quality_score(validation)
+sheet_names = excel_sheet_names(excel_source) if excel_source is not None else []
+
+st.sidebar.markdown("---")
+st.sidebar.caption(f"**Data source:** {source_mode}")
+st.sidebar.caption(f"**File:** {source_name}")
+st.sidebar.caption(f"**Sheets detected:** {len(sheet_names)}")
+st.sidebar.caption(f"**Data quality:** {data_quality_score}%")
+with st.sidebar.expander("Data validation details"):
+    st.dataframe(validation, use_container_width=True, hide_index=True)
+    if excel_source is None:
+        st.warning("Integrated Excel master was not found; CSV fallback is active.")
+    elif data_quality_score < 90:
+        st.warning("Some datasets are empty or missing expected columns. Review the validation table.")
+    else:
+        st.success("Integrated master passed the core data checks.")
+
+for key, value in D.items():
+    globals()[key] = value
 
 NAV_ITEMS = [
     "1. Country CEO Dashboard",
-    "2. Daily Control Tower",
+    "2. Daily & Department Operations",
     "3. Calendar & Obligations",
-    "4. Submission & Response",
+    "4. Submission, Response & Quality",
     "5. Product Approval",
-    "6. Workflow & Coordination",
-    "7. Regulator & Stakeholder Intelligence",
-    "8. Regulatory & Political Intelligence",
-    "9. Meeting Intelligence",
-    "10. Document QC & Translation",
-    "11. Country Reputation Monitor",
+    "6. Regulatory & Political Intelligence",
+    "7. Regulatory Position & Advocacy",
+    "8. Regulator & Stakeholder Intelligence",
+    "9. Engagement & Meeting Intelligence",
+    "10. Internal Coordination & Actions",
+    "11. Document QC, Translation & Filing",
     "12. Inspection Readiness",
-    "13. Executive & Regional Reporting",
-    "14. Knowledge Base",
-    "15. Regulatory Copilot",
+    "13. Reputation & Public Issues",
+    "14. Executive & Regional Reporting",
+    "15. Knowledge Base, Copilot & Templates",
 ]
-
-st.sidebar.markdown("**Navigation**")
-menu = st.sidebar.radio("Select module", NAV_ITEMS, index=0, label_visibility="collapsed")
+menu = st.sidebar.radio("Navigation", NAV_ITEMS, index=0, label_visibility="collapsed")
 
 
 if menu == "1. Country CEO Dashboard":
     st.title("Country CEO Regulatory & Public Affairs Dashboard")
+    st.caption(f"Live source: {source_mode} — {source_name} | Data quality: {data_quality_score}%")
     overdue = count_equal(calendar, "Auto Status", "Overdue")
-    due_soon = count_equal(calendar, "Auto Status", "Due Soon")
-    high_signals = count_in(early_warning, "Risk Level", ["High", "Critical"])
-    critical_stakeholders = count_equal(stakeholders, "Priority", "Critical")
+    high_political = count_equal(political, "EMT RAG", "Red")
+    open_commitments = int(pd.to_numeric(engagements.get("Open Commitments", pd.Series(dtype=float)), errors="coerce").fillna(0).sum())
+    quality = round(float(pd.to_numeric(response_quality.get("Response Quality Score", pd.Series(dtype=float)), errors="coerce").mean()), 1) if len(response_quality) else 0
     reputation_score = latest_value(reputation, "Overall Reputation Score")
     inspection_score = round(float(pd.to_numeric(inspection.get("Readiness Score (0-100)", pd.Series(dtype=float)), errors="coerce").mean()), 1) if len(inspection) else 0
-
     cols = st.columns(6 if not mobile_mode else 2)
     metrics = [
-        ("Overall status", "AMBER" if overdue or high_signals >= 3 else "GREEN"),
-        ("Overdue items", overdue),
-        ("Due in 7 days", due_soon),
-        ("High signals", high_signals),
-        ("Reputation", reputation_score),
+        ("Overall status", "AMBER" if overdue or high_political else "GREEN"),
+        ("Overdue items", overdue), ("High EMT issues", high_political),
+        ("Open commitments", open_commitments), ("Response quality", quality),
         ("Inspection readiness", inspection_score),
     ]
-    for i, (label, value) in enumerate(metrics):
-        cols[i % len(cols)].metric(label, value)
+    for i, item in enumerate(metrics): cols[i % len(cols)].metric(*item)
 
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        signal_mix = count_frame(early_warning, "Risk Level", "Risk level")
-        if len(signal_mix):
-            st.plotly_chart(px.pie(signal_mix, names="Risk level", values="Count", hole=.55, title="Regulatory signals by risk level"), use_container_width=True)
+        if all(c in political.columns for c in ["Business Impact (1-5)", "Political Sensitivity (1-5)", "Political / Policy Development"]):
+            plot = safe_numeric(political, ["Business Impact (1-5)", "Political Sensitivity (1-5)", "Strategic Significance Score"])
+            plot["Strategic Significance Score"] = plot["Strategic Significance Score"].fillna(.1).clip(lower=.1)
+            st.plotly_chart(px.scatter(plot, x="Business Impact (1-5)", y="Political Sensitivity (1-5)",
+                                       size="Strategic Significance Score", color="EMT RAG",
+                                       hover_name="Political / Policy Development",
+                                       title="Regulatory & Political Intelligence Map"), use_container_width=True)
     with c2:
-        if all(c in relationship.columns for c in ["Stakeholder", "Overall Health Score"]):
-            latest_rel = relationship.sort_values("Month").groupby("Stakeholder", as_index=False).tail(1)
-            st.plotly_chart(px.bar(latest_rel, x="Stakeholder", y="Overall Health Score", color="Health RAG" if "Health RAG" in latest_rel.columns else None, title="Latest relationship health"), use_container_width=True)
+        mix = count_frame(engagements, "Stage", "Engagement Stage")
+        if len(mix):
+            st.plotly_chart(px.funnel(mix, x="Count", y="Engagement Stage", title="Stakeholder Engagement Lifecycle"), use_container_width=True)
 
-    st.subheader("90-day regulatory and public affairs outlook")
-    if all(c in timeline.columns for c in ["Date", "Item", "Priority"]):
-        plot = timeline.dropna(subset=["Date"]).copy()
-        plot["End"] = plot["Date"] + pd.Timedelta(days=3)
-        st.plotly_chart(px.timeline(plot, x_start="Date", x_end="End", y="Item", color="Priority", title="Executive timeline"), use_container_width=True)
-    else:
-        st.dataframe(safe_sort(timeline, ["Date"]), use_container_width=True)
+    c3, c4 = st.columns(2 if not mobile_mode else 1)
+    with c3:
+        fig = make_timeline(timeline, "Date", "Item", "Priority", "90-Day Regulatory & Public Affairs Outlook")
+        if fig: st.plotly_chart(fig, use_container_width=True)
+    with c4:
+        if all(c in relationship.columns for c in ["Month", "Stakeholder", "Overall Health Score"]):
+            st.plotly_chart(px.line(relationship, x="Month", y="Overall Health Score", color="Stakeholder",
+                                    markers=True, title="Stakeholder Relationship Health Trend"), use_container_width=True)
+    st.subheader("Top EMT Issues")
+    st.dataframe(safe_sort(political, ["Strategic Significance Score"], ascending=False).head(5), use_container_width=True)
 
-    st.subheader("Top EMT insights")
-    left, right = st.columns(2 if not mobile_mode else 1)
-    with left:
-        st.dataframe(safe_sort(early_warning, ["Early Warning Score"], ascending=False).head(5), use_container_width=True)
-    with right:
-        st.dataframe(safe_sort(stakeholders, ["Stakeholder Risk Score"], ascending=False).head(5), use_container_width=True)
 
-elif menu == "2. Daily Control Tower":
-    st.title("Daily Control Tower")
+elif menu == "2. Daily & Department Operations":
+    st.title("Daily & Department Operations Control")
     c = st.columns(5 if not mobile_mode else 2)
     vals = [
-        ("Due today", int((daily_actions.get("Days to Due", pd.Series(dtype=float)) == 0).sum())),
-        ("Overdue", int((daily_actions.get("Days to Due", pd.Series(dtype=float)) < 0).sum())),
-        ("Escalations", count_equal(daily_actions, "Escalation", "Yes")),
-        ("Docs not ready", int((document_qc.get("Auto Readiness", pd.Series(dtype=str)).astype(str) != "Ready").sum())),
-        ("Open internal items", int((~internal.get("Status", pd.Series(dtype=str)).astype(str).isin(["Done", "Closed"])).sum())),
+        ("Daily overdue", int((daily_actions.get("Days to Due", pd.Series(dtype=float)) < 0).sum())),
+        ("Operations red", count_equal(department_ops, "Operations RAG", "Red")),
+        ("RO requests open", int((~ro_requests.get("Review Status", pd.Series(dtype=str)).astype(str).isin(["Submitted", "Closed"])).sum())),
+        ("Invoices pending", int((department_ops.get("Expense / Invoice Status", pd.Series(dtype=str)).astype(str) == "Pending").sum())),
+        ("Not filed", int((department_ops.get("Filing Status", pd.Series(dtype=str)).astype(str) == "Not Filed").sum())),
     ]
-    for i, v in enumerate(vals):
-        c[i % len(c)].metric(*v)
-
-    chart1, chart2 = st.columns(2 if not mobile_mode else 1)
-    owner_col = next((x for x in ["Owner", "Responsible Owner", "Assigned To"] if x in daily_actions.columns), None)
-    with chart1:
-        if owner_col:
-            workload = count_frame(daily_actions, owner_col, "Owner")
-            st.plotly_chart(px.bar(workload, x="Count", y="Owner", orientation="h", title="Open workload by owner"), use_container_width=True)
-    with chart2:
-        priority_col = next((x for x in ["Priority", "Risk Level"] if x in daily_actions.columns), None)
-        if priority_col:
-            priority_mix = count_frame(daily_actions, priority_col, "Priority")
-            st.plotly_chart(px.pie(priority_mix, names="Priority", values="Count", hole=.5, title="Action portfolio by priority"), use_container_width=True)
-
+    for i, item in enumerate(vals): c[i % len(c)].metric(*item)
+    c1, c2 = st.columns(2 if not mobile_mode else 1)
+    with c1:
+        workstream = count_frame(department_ops, "Workstream", "Workstream")
+        if len(workstream): st.plotly_chart(px.bar(workstream, x="Count", y="Workstream", orientation="h", title="Workload by Workstream"), use_container_width=True)
+    with c2:
+        owner = count_frame(daily_actions, next((x for x in ["Owner", "Responsible Owner", "Assigned To"] if x in daily_actions.columns), "Owner"), "Owner")
+        if len(owner): st.plotly_chart(px.bar(owner, x="Count", y="Owner", orientation="h", title="Daily Actions by Owner"), use_container_width=True)
+    st.subheader("Department operations backlog")
+    st.dataframe(safe_sort(department_ops, ["Operations RAG", "Due Date"]), use_container_width=True)
+    st.subheader("Daily actions")
     st.dataframe(safe_sort(daily_actions, ["Priority", "Due Date"]), use_container_width=True)
+
 
 elif menu == "3. Calendar & Obligations":
     st.title("Regulatory Calendar & Obligation Register")
-    c = st.columns(5 if not mobile_mode else 2)
-    c[0].metric("Calendar items", len(calendar))
-    c[1].metric("Overdue", count_equal(calendar, "Auto Status", "Overdue"))
-    c[2 % len(c)].metric("Due soon", count_equal(calendar, "Auto Status", "Due Soon"))
-    c[3 % len(c)].metric("Critical obligations", count_equal(obligations, "Criticality", "Critical"))
-    c[4 % len(c)].metric("Red obligations", count_equal(obligations, "RAG", "Red"))
-
+    c = st.columns(4 if not mobile_mode else 2)
+    c[0].metric("Calendar overdue", count_equal(calendar, "Auto Status", "Overdue"))
+    c[1].metric("Due soon", count_equal(calendar, "Auto Status", "Due Soon"))
+    c[2 % len(c)].metric("Critical obligations", count_equal(obligations, "Criticality", "Critical"))
+    c[3 % len(c)].metric("Red obligations", count_equal(obligations, "RAG", "Red"))
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        status_mix = count_frame(calendar, "Auto Status", "Status")
-        if len(status_mix):
-            st.plotly_chart(px.bar(status_mix, x="Status", y="Count", title="Calendar status"), use_container_width=True)
+        status_mix = count_frame(calendar, "Auto Status", "Calendar Status")
+        if len(status_mix): st.plotly_chart(px.bar(status_mix, x="Calendar Status", y="Count", title="Calendar Status"), use_container_width=True)
     with c2:
         rag_mix = count_frame(obligations, "RAG", "RAG")
-        if len(rag_mix):
-            st.plotly_chart(px.pie(rag_mix, names="RAG", values="Count", hole=.5, title="Obligation portfolio by RAG"), use_container_width=True)
+        if len(rag_mix): st.plotly_chart(px.pie(rag_mix, names="RAG", values="Count", hole=.55, title="Obligation Portfolio by RAG"), use_container_width=True)
+    st.subheader("Regulatory calendar")
+    st.dataframe(safe_sort(calendar, ["Due Date"]), use_container_width=True)
+    st.subheader("Obligation register")
+    st.dataframe(safe_sort(obligations, ["Next Due Date"]), use_container_width=True)
 
-    with st.expander("Regulatory calendar", expanded=True):
-        st.dataframe(safe_sort(calendar, ["Due Date"]), use_container_width=True)
-        st.download_button("Download calendar CSV", calendar.to_csv(index=False).encode("utf-8-sig"), "regulatory_calendar.csv")
-    with st.expander("Obligation register", expanded=True):
-        st.dataframe(safe_sort(obligations, ["Next Due Date"]), use_container_width=True)
 
-elif menu == "4. Submission & Response":
-    st.title("Submission & Response Tracker")
-    c = st.columns(4 if not mobile_mode else 2)
-    c[0].metric("Open responses", int((~responses.get("Status", pd.Series(dtype=str)).astype(str).isin(["Closed", "Submitted"])).sum()))
-    c[1].metric("Overdue SLA", count_equal(responses, "SLA Status", "Overdue"))
-    c[2 % len(c)].metric("Pending submissions", int((~submissions.get("Status", pd.Series(dtype=str)).astype(str).isin(["Submitted", "Approved", "Closed"])).sum()))
-    c[3 % len(c)].metric("Escalated submissions", count_equal(submissions, "Escalation Flag", "Yes"))
-
+elif menu == "4. Submission, Response & Quality":
+    st.title("Submission, Regulatory Response & Quality Control")
+    c = st.columns(5 if not mobile_mode else 2)
+    c[0].metric("Response overdue", count_equal(responses, "SLA Status", "Overdue"))
+    c[1].metric("Rework items", count_equal(response_quality, "Rework Required", "Yes"))
+    c[2 % len(c)].metric("Quality red", count_equal(response_quality, "Quality RAG", "Red"))
+    c[3 % len(c)].metric("Pending submissions", int((~submissions.get("Status", pd.Series(dtype=str)).astype(str).isin(["Submitted", "Approved", "Closed"])).sum()))
+    c[4 % len(c)].metric("Avg quality", round(float(pd.to_numeric(response_quality.get("Response Quality Score", pd.Series(dtype=float)), errors="coerce").mean()),1) if len(response_quality) else 0)
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        response_mix = count_frame(responses, "SLA Status", "Response SLA")
-        if len(response_mix):
-            st.plotly_chart(px.bar(response_mix, x="Response SLA", y="Count", title="Regulatory response SLA"), use_container_width=True)
+        if all(c in response_quality.columns for c in ["Internal Function", "Response Quality Score"]):
+            st.plotly_chart(px.bar(response_quality, x="Internal Function", y="Response Quality Score", color="Quality RAG", title="Response Quality by Function"), use_container_width=True)
     with c2:
-        submission_mix = count_frame(submissions, "Status", "Submission status")
-        if len(submission_mix):
-            st.plotly_chart(px.pie(submission_mix, names="Submission status", values="Count", hole=.5, title="Submission status mix"), use_container_width=True)
-
-    st.subheader("Incoming regulatory requests")
+        sla = count_frame(responses, "SLA Status", "SLA Status")
+        if len(sla): st.plotly_chart(px.pie(sla, names="SLA Status", values="Count", hole=.5, title="Regulatory Response SLA"), use_container_width=True)
+    st.subheader("Internal response-quality review")
+    st.dataframe(safe_sort(response_quality, ["Response Quality Score"]), use_container_width=True)
+    st.subheader("Regulatory responses and outgoing submissions")
     st.dataframe(safe_sort(responses, ["Response Due Date"]), use_container_width=True)
-    st.subheader("Outgoing submissions")
     st.dataframe(safe_sort(submissions, ["Submission Due Date"]), use_container_width=True)
 
+
 elif menu == "5. Product Approval":
-    st.title("Product Approval Command Center & Forecast")
+    st.title("Product Approval Command Center")
     c = st.columns(4 if not mobile_mode else 2)
     c[0].metric("Products monitored", len(product_forecast))
-    c[1].metric("Green forecast", count_equal(product_forecast, "Forecast RAG", "Green"))
-    c[2 % len(c)].metric("Amber", count_equal(product_forecast, "Forecast RAG", "Amber"))
-    c[3 % len(c)].metric("Red", count_equal(product_forecast, "Forecast RAG", "Red"))
-
+    c[1].metric("Forecast red", count_equal(product_forecast, "Forecast RAG", "Red"))
+    c[2 % len(c)].metric("Approved", count_equal(products, "Current Stage", "Approved"))
+    c[3 % len(c)].metric("High risk", count_equal(products, "Auto Risk", "High"))
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        if all(x in product_forecast.columns for x in ["Product", "Approval Probability (%)", "Forecast RAG"]):
-            st.plotly_chart(px.bar(product_forecast, x="Product", y="Approval Probability (%)", color="Forecast RAG", title="Forecast approval probability"), use_container_width=True)
+        if all(c in product_forecast.columns for c in ["Product", "Approval Probability (%)", "Forecast RAG"]):
+            st.plotly_chart(px.bar(product_forecast, x="Product", y="Approval Probability (%)", color="Forecast RAG", title="Approval Probability Forecast"), use_container_width=True)
     with c2:
-        stage_source = products if "Current Stage" in products.columns else product_forecast
-        stage_mix = count_frame(stage_source, "Current Stage", "Stage")
-        if len(stage_mix):
-            st.plotly_chart(go.Figure(go.Funnel(y=stage_mix["Stage"], x=stage_mix["Count"])), use_container_width=True)
+        stage = count_frame(products, "Current Stage", "Current Stage")
+        if len(stage): st.plotly_chart(px.funnel(stage, x="Count", y="Current Stage", title="Product Approval Pipeline"), use_container_width=True)
+    st.dataframe(safe_sort(product_forecast, ["Approval Probability (%)"]), use_container_width=True)
+    st.dataframe(safe_sort(products, ["Target Approval Date"]), use_container_width=True)
 
-    with st.expander("Approval command center", expanded=True):
-        st.dataframe(safe_sort(products, ["Target Approval Date"]), use_container_width=True)
-    with st.expander("Approval forecast", expanded=True):
-        st.dataframe(safe_sort(product_forecast, ["Approval Probability (%)"]), use_container_width=True)
 
-elif menu == "6. Workflow & Coordination":
-    st.title("Workflow & Internal Coordination")
-    c = st.columns(3 if not mobile_mode else 1)
-    c[0].metric("Workflow stages", len(workflow))
-    c[1 % len(c)].metric("Open coordination items", int((~internal.get("Status", pd.Series(dtype=str)).astype(str).isin(["Done", "Closed"])).sum()))
-    c[2 % len(c)].metric("Escalations", count_equal(internal, "Escalation", "Yes"))
-
+elif menu == "6. Regulatory & Political Intelligence":
+    st.title("Regulatory Affairs & Political Analysis")
+    st.caption("Government priorities, legislative developments, policy direction and Manulife business implications.")
+    c = st.columns(4 if not mobile_mode else 2)
+    c[0].metric("High EMT issues", count_equal(political, "EMT RAG", "Red"))
+    c[1].metric("Active policy issues", len(policies))
+    c[2 % len(c)].metric("High early warnings", count_in(early_warning, "Risk Level", ["High", "Critical"]))
+    c[3 % len(c)].metric("Open advocacy windows", int((political.get("Advocacy Window", pd.Series(dtype=str)).astype(str) != "Closed").sum()))
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        if all(x in workflow.columns for x in ["Stage", "SLA Days"]):
-            st.plotly_chart(px.bar(workflow, x="Stage", y="SLA Days", color="Status" if "Status" in workflow.columns else None, title="Workflow SLA by stage"), use_container_width=True)
+        if all(c in political.columns for c in ["Business Impact (1-5)", "Political Sensitivity (1-5)", "Political / Policy Development"]):
+            plot = safe_numeric(political, ["Business Impact (1-5)", "Political Sensitivity (1-5)", "Strategic Significance Score"])
+            plot["Strategic Significance Score"] = plot["Strategic Significance Score"].fillna(.1).clip(lower=.1)
+            st.plotly_chart(px.scatter(plot, x="Business Impact (1-5)", y="Political Sensitivity (1-5)", size="Strategic Significance Score", color="Policy Direction", hover_name="Political / Policy Development", title="Impact × Political Sensitivity"), use_container_width=True)
     with c2:
-        dept_col = next((x for x in ["Department", "Responsible Department", "Owner"] if x in internal.columns), None)
-        if dept_col:
-            dept_mix = count_frame(internal, dept_col, "Department")
-            st.plotly_chart(px.bar(dept_mix, x="Count", y="Department", orientation="h", title="Internal coordination workload"), use_container_width=True)
+        stages = count_frame(political, "Legislative Stage", "Legislative Stage")
+        if len(stages): st.plotly_chart(px.bar(stages, x="Legislative Stage", y="Count", title="Legislative / Policy Pipeline"), use_container_width=True)
+    st.dataframe(safe_sort(political, ["Strategic Significance Score"], ascending=False), use_container_width=True)
+    if len(political):
+        issue = st.selectbox("Generate EMT insight for issue", political["Political / Policy Development"].astype(str).tolist())
+        row = political[political["Political / Policy Development"].astype(str) == issue].iloc[0]
+        st.markdown(generate_emt_insight(row))
 
-    st.subheader("Workflow engine")
-    st.dataframe(workflow, use_container_width=True)
-    st.subheader("Internal coordination tracker")
-    st.dataframe(safe_sort(internal, ["Due Date"]), use_container_width=True)
 
-elif menu == "7. Regulator & Stakeholder Intelligence":
-    st.title("Regulator & Stakeholder Intelligence")
-    regulators = sorted(set(crm.get("Regulator", pd.Series(dtype=str)).dropna().astype(str).tolist()) | set(interactions.get("Regulator", pd.Series(dtype=str)).dropna().astype(str).tolist()))
-    selected = st.selectbox("Select regulator / stakeholder", regulators if regulators else ["MOF"])
+elif menu == "7. Regulatory Position & Advocacy":
+    st.title("Regulatory Position & Advocacy Workbench")
+    c = st.columns(4 if not mobile_mode else 2)
+    c[0].metric("Positions tracked", len(positions))
+    c[1].metric("Approved", count_equal(positions, "Internal Approval Status", "Approved"))
+    c[2 % len(c)].metric("Near ready", count_equal(positions, "Position Readiness", "Near Ready"))
+    c[3 % len(c)].metric("In development", count_equal(positions, "Position Readiness", "In Development"))
+    readiness = count_frame(positions, "Position Readiness", "Readiness")
+    if len(readiness): st.plotly_chart(px.funnel(readiness, x="Count", y="Readiness", title="Advocacy Position Readiness"), use_container_width=True)
+    st.dataframe(safe_sort(positions, ["Due Date"]), use_container_width=True)
+    if len(positions):
+        selected = st.selectbox("Position paper / message house", positions["Policy Issue"].astype(str).tolist())
+        p = positions[positions["Policy Issue"].astype(str) == selected].iloc[0]
+        st.markdown(f"""
+### {p.get('Policy Issue','')}
+**Regulatory objective:** {p.get('Regulatory Objective','')}  
+**Manulife business impact:** {p.get('Manulife Business Impact','')}  
+**Customer / market impact:** {p.get('Customer / Market Impact','')}  
+**Proposed position:** {p.get('Proposed Manulife Position','')}  
+**Supporting evidence:** {p.get('Supporting Evidence','')}  
+**Key message:** {p.get('Key Message','')}  
+**Engagement channel:** {p.get('Engagement Channel','')}
+""")
 
-    profile = crm[crm.get("Regulator", pd.Series(dtype=str)).astype(str) == selected]
-    interaction_view = interactions[interactions.get("Regulator", pd.Series(dtype=str)).astype(str) == selected]
-    meeting_view = meetings[meetings.get("Regulator", pd.Series(dtype=str)).astype(str) == selected]
-    if len(profile):
-        p = profile.iloc[0]
-        c = st.columns(4 if not mobile_mode else 2)
-        c[0].metric("Relationship", p.get("Relationship Strength (1-5)", ""))
-        c[1].metric("Sentiment", p.get("Sentiment", ""))
-        c[2 % len(c)].metric("Open issues", str(p.get("Open Issues", ""))[:20])
-        c[3 % len(c)].metric("Next engagement", p.get("Next Engagement", ""))
-        st.markdown(f"**Mandate:** {p.get('Mandate / Role','')}  \n**Institutional memory:** {p.get('Institutional Memory Note','')}")
 
+elif menu == "8. Regulator & Stakeholder Intelligence":
+    st.title("Regulator 360° & Stakeholder Intelligence")
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        if all(x in stakeholders.columns for x in ["Influence (1-5)", "Relationship (1-5)", "Stakeholder"]):
+        if all(c in stakeholders.columns for c in ["Influence (1-5)", "Relationship (1-5)", "Stakeholder"]):
             plot = safe_numeric(stakeholders, ["Influence (1-5)", "Relationship (1-5)", "Stakeholder Risk Score"])
             plot["Stakeholder Risk Score"] = plot["Stakeholder Risk Score"].fillna(.1).clip(lower=.1)
-            st.plotly_chart(px.scatter(plot, x="Influence (1-5)", y="Relationship (1-5)", size="Stakeholder Risk Score", color="Position" if "Position" in plot.columns else None, hover_name="Stakeholder", title="Influence–relationship map"), use_container_width=True)
+            st.plotly_chart(px.scatter(plot, x="Relationship (1-5)", y="Influence (1-5)", size="Stakeholder Risk Score", color="Position", hover_name="Stakeholder", title="Influence × Relationship Matrix"), use_container_width=True)
     with c2:
-        if all(x in relationship.columns for x in ["Month", "Stakeholder", "Overall Health Score"]):
-            st.plotly_chart(px.line(relationship, x="Month", y="Overall Health Score", color="Stakeholder", markers=True, title="Relationship health trend"), use_container_width=True)
-
-    st.subheader("Stakeholder intelligence")
+        if all(c in relationship.columns for c in ["Month", "Stakeholder", "Overall Health Score"]):
+            st.plotly_chart(px.line(relationship, x="Month", y="Overall Health Score", color="Stakeholder", markers=True, title="Relationship Health Trend"), use_container_width=True)
+    regulators = sorted(set(crm.get("Regulator", pd.Series(dtype=str)).dropna().astype(str)) | set(interactions.get("Regulator", pd.Series(dtype=str)).dropna().astype(str)))
+    selected = st.selectbox("Regulator 360° profile", regulators if regulators else ["MOF"])
+    profile = crm[crm.get("Regulator", pd.Series(dtype=str)).astype(str) == selected]
+    if len(profile):
+        p = profile.iloc[0]
+        st.markdown(f"**Mandate:** {p.get('Mandate / Role','')}  \n**Open issues:** {p.get('Open Issues','')}  \n**Pending requests:** {p.get('Pending Requests','')}  \n**Institutional memory:** {p.get('Institutional Memory Note','')}")
+    st.dataframe(interactions[interactions.get("Regulator", pd.Series(dtype=str)).astype(str) == selected], use_container_width=True)
     st.dataframe(safe_sort(stakeholders, ["Stakeholder Risk Score"], ascending=False), use_container_width=True)
-    st.subheader("Interaction history")
-    st.dataframe(interaction_view, use_container_width=True)
-    st.subheader("Meeting intelligence")
-    st.dataframe(meeting_view, use_container_width=True)
 
-elif menu == "8. Regulatory & Political Intelligence":
-    st.title("Regulatory & Political Intelligence")
+
+elif menu == "9. Engagement & Meeting Intelligence":
+    st.title("External Stakeholder Engagement Lifecycle")
     c = st.columns(4 if not mobile_mode else 2)
-    c[0].metric("Policies monitored", len(policies))
-    c[1].metric("High-risk policies", count_equal(policies, "Risk Level", "High"))
-    c[2 % len(c)].metric("Early-warning signals", len(early_warning))
-    c[3 % len(c)].metric("High signals", count_in(early_warning, "Risk Level", ["High", "Critical"]))
-
+    c[0].metric("Engagements", len(engagements))
+    c[1].metric("Open commitments", int(pd.to_numeric(engagements.get("Open Commitments", pd.Series(dtype=float)), errors="coerce").fillna(0).sum()))
+    c[2 % len(c)].metric("Follow-up red", count_equal(engagements, "Follow-up RAG", "Red"))
+    c[3 % len(c)].metric("Minutes issued", count_equal(engagements, "Minutes Issued", "Yes"))
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        if all(x in early_warning.columns for x in ["Probability (%)", "Business Impact (1-5)", "Topic"]):
-            plot = safe_numeric(early_warning, ["Probability (%)", "Business Impact (1-5)", "Early Warning Score"])
-            plot["Early Warning Score"] = plot["Early Warning Score"].fillna(.1).clip(lower=.1)
-            st.plotly_chart(px.scatter(plot, x="Probability (%)", y="Business Impact (1-5)", size="Early Warning Score", color="Risk Level" if "Risk Level" in plot.columns else None, hover_name="Topic", title="Emerging regulatory and political signals"), use_container_width=True)
+        stages = count_frame(engagements, "Stage", "Stage")
+        if len(stages): st.plotly_chart(px.funnel(stages, x="Count", y="Stage", title="Engagement Lifecycle Funnel"), use_container_width=True)
     with c2:
-        heat = policies.copy()
-        if all(x in heat.columns for x in ["Probability (%)", "Business Impact (1-5)", "Policy / Regulation"]):
-            heat = safe_numeric(heat, ["Probability (%)", "Business Impact (1-5)", "Risk Score"])
-            heat["Probability (1-5)"] = (heat["Probability (%)"] / 20).clip(.1, 5)
-            heat["Risk Score"] = heat["Risk Score"].fillna(.1).clip(lower=.1)
-            st.plotly_chart(px.scatter(heat, x="Probability (1-5)", y="Business Impact (1-5)", size="Risk Score", color="Risk Level" if "Risk Level" in heat.columns else None, hover_name="Policy / Regulation", range_x=[0, 5.5], range_y=[0, 5.5], title="Policy probability × business impact"), use_container_width=True)
-
-    with st.expander("Policy monitoring", expanded=True):
-        st.dataframe(safe_sort(policies, ["Risk Score"], ascending=False), use_container_width=True)
-    with st.expander("Regulatory early warning", expanded=True):
-        st.dataframe(safe_sort(early_warning, ["Early Warning Score"], ascending=False), use_container_width=True)
-
-elif menu == "9. Meeting Intelligence":
-    st.title("Meeting Intelligence")
-    stage_col = next((x for x in ["Status", "Meeting Status", "Stage"] if x in meetings.columns), None)
-    c1, c2 = st.columns(2 if not mobile_mode else 1)
-    with c1:
-        if stage_col:
-            stage_mix = count_frame(meetings, stage_col, "Engagement stage")
-            st.plotly_chart(px.bar(stage_mix, x="Engagement stage", y="Count", title="Engagement lifecycle"), use_container_width=True)
-    with c2:
-        regulator_col = "Regulator" if "Regulator" in meetings.columns else None
-        if regulator_col:
-            reg_mix = count_frame(meetings, regulator_col, "Regulator")
-            st.plotly_chart(px.bar(reg_mix, x="Count", y="Regulator", orientation="h", title="Engagements by stakeholder"), use_container_width=True)
-
-    st.dataframe(meetings, use_container_width=True)
-    with st.expander("Generate meeting brief", expanded=True):
-        c1, c2 = st.columns(2 if not mobile_mode else 1)
-        with c1:
-            regulator = st.selectbox("Regulator", ["MOF", "ISA", "IAV", "SBV", "Consumer Protection Authority"])
-            topic = st.text_input("Topic", "Product approval and consumer disclosure")
-            meeting_type = st.selectbox("Meeting type", ["Technical session", "Strategic dialogue", "Working group", "Ad-hoc meeting"])
-        with c2:
-            context = st.text_area("Background", "Manulife needs to clarify regulator questions and agree on next steps.")
+        if all(c in engagements.columns for c in ["Planned Date", "Topic", "Stage"]):
+            fig = make_timeline(engagements, "Planned Date", "Topic", "Stage", "Engagement Calendar")
+            if fig: st.plotly_chart(fig, use_container_width=True)
+    st.dataframe(safe_sort(engagements, ["Planned Date"]), use_container_width=True)
+    with st.expander("Generate meeting brief", expanded=False):
+        regulator = st.selectbox("Regulator", ["MOF", "ISA", "IAV", "SBV", "Consumer Protection Authority"])
+        topic = st.text_input("Topic", "Product approval and consumer disclosure")
+        meeting_type = st.selectbox("Meeting type", ["Technical session", "Strategic dialogue", "Working group", "Ad-hoc meeting"])
+        context = st.text_area("Background", "Manulife needs to clarify regulator questions and agree on next steps.")
         brief = generate_meeting_brief(regulator, topic, meeting_type, context)
         st.markdown(brief)
         st.download_button("Download meeting brief", brief.encode("utf-8"), "meeting_brief.md")
 
-elif menu == "10. Document QC & Translation":
-    st.title("Document Quality Control & Translation")
-    c = st.columns(4 if not mobile_mode else 2)
-    c[0].metric("Ready documents", count_equal(document_qc, "Auto Readiness", "Ready"))
-    c[1].metric("Needs review", count_equal(document_qc, "Auto Readiness", "Needs Review"))
-    c[2 % len(c)].metric("Not ready", count_equal(document_qc, "Auto Readiness", "Not Ready"))
-    c[3 % len(c)].metric("Overdue translation", count_equal(translation, "Auto Status", "Overdue"))
 
+elif menu == "10. Internal Coordination & Actions":
+    st.title("Internal Coordination, Workflow & Action Tracking")
+    c = st.columns(4 if not mobile_mode else 2)
+    c[0].metric("Open internal items", int((~internal.get("Status", pd.Series(dtype=str)).astype(str).isin(["Done", "Closed"])).sum()))
+    c[1].metric("Escalations", count_equal(internal, "Escalation", "Yes"))
+    c[2 % len(c)].metric("Workflow stages", len(workflow))
+    c[3 % len(c)].metric("High priority actions", count_equal(daily_actions, "Priority", "High"))
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        qc_mix = count_frame(document_qc, "Auto Readiness", "Readiness")
-        if len(qc_mix):
-            st.plotly_chart(px.pie(qc_mix, names="Readiness", values="Count", hole=.5, title="Document readiness"), use_container_width=True)
+        if all(c in workflow.columns for c in ["Stage", "SLA Days"]):
+            st.plotly_chart(px.bar(workflow, x="Stage", y="SLA Days", color="Status" if "Status" in workflow.columns else None, title="Workflow SLA by Stage"), use_container_width=True)
     with c2:
-        tr_col = "Auto Status" if "Auto Status" in translation.columns else "Status"
-        tr_mix = count_frame(translation, tr_col, "Translation status")
-        if len(tr_mix):
-            st.plotly_chart(px.bar(tr_mix, x="Translation status", y="Count", title="Translation workflow"), use_container_width=True)
+        owner_col = next((c for c in ["Owner", "Responsible Owner", "Assigned To"] if c in internal.columns), None)
+        if owner_col:
+            owner = count_frame(internal, owner_col, "Owner")
+            st.plotly_chart(px.bar(owner, x="Count", y="Owner", orientation="h", title="Internal Actions by Owner"), use_container_width=True)
+    st.dataframe(safe_sort(internal, ["Due Date"]), use_container_width=True)
+    st.dataframe(workflow, use_container_width=True)
 
-    st.subheader("Document QC checklist")
-    st.dataframe(safe_sort(document_qc, ["Due Date"]), use_container_width=True)
-    st.subheader("Translation tracker")
-    st.dataframe(safe_sort(translation, ["Due Date"]), use_container_width=True)
 
-elif menu == "11. Country Reputation Monitor":
-    st.title("Country Reputation Monitor")
-    c = st.columns(4 if not mobile_mode else 2)
-    c[0].metric("Latest reputation", latest_value(reputation, "Overall Reputation Score"))
-    c[1].metric("Social sentiment", latest_value(reputation, "Social Sentiment Score"))
-    c[2 % len(c)].metric("Complaints index", latest_value(reputation, "Customer Complaints Index"))
-    c[3 % len(c)].metric("Regulatory concern", latest_value(reputation, "Regulatory Concern Index"))
-
+elif menu == "11. Document QC, Translation & Filing":
+    st.title("Document QC, Translation, Bilingual Control & Filing")
+    c = st.columns(5 if not mobile_mode else 2)
+    c[0].metric("QC not ready", int((document_qc.get("Auto Readiness", pd.Series(dtype=str)).astype(str) != "Ready").sum()))
+    c[1].metric("Translation overdue", int((translation.get("Days to Due", pd.Series(dtype=float)) < 0).sum()))
+    c[2 % len(c)].metric("Bilingual red", count_equal(bilingual, "Bilingual RAG", "Red"))
+    c[3 % len(c)].metric("Not filed", int((department_ops.get("Filing Status", pd.Series(dtype=str)).astype(str) == "Not Filed").sum()))
+    c[4 % len(c)].metric("Avg consistency", round(float(pd.to_numeric(bilingual.get("Bilingual Consistency Score", pd.Series(dtype=float)), errors="coerce").mean()),1) if len(bilingual) else 0)
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        if all(x in reputation.columns for x in ["Month", "Overall Reputation Score"]):
-            st.plotly_chart(px.line(reputation, x="Month", y="Overall Reputation Score", markers=True, title="Reputation score trend"), use_container_width=True)
+        qc = count_frame(document_qc, "Auto Readiness", "Readiness")
+        if len(qc): st.plotly_chart(px.pie(qc, names="Readiness", values="Count", hole=.5, title="Document Readiness"), use_container_width=True)
     with c2:
-        latest = reputation.tail(1)
-        driver_cols = [x for x in ["Customer Complaints Index", "Negative Media Index", "Social Sentiment Score", "Regulatory Concern Index"] if x in latest.columns]
-        if driver_cols:
-            driver = latest[driver_cols].T.reset_index()
-            driver.columns = ["Driver", "Score"]
-            st.plotly_chart(px.bar(driver, x="Driver", y="Score", title="Latest reputation drivers"), use_container_width=True)
+        if all(c in bilingual.columns for c in ["Document", "Bilingual Consistency Score", "Bilingual RAG"]):
+            st.plotly_chart(px.bar(bilingual, x="Document", y="Bilingual Consistency Score", color="Bilingual RAG", title="Bilingual Consistency Score"), use_container_width=True)
+    st.dataframe(document_qc, use_container_width=True)
+    st.dataframe(translation, use_container_width=True)
+    st.dataframe(bilingual, use_container_width=True)
 
-    st.dataframe(reputation, use_container_width=True)
 
 elif menu == "12. Inspection Readiness":
     st.title("Regulatory Inspection Readiness")
@@ -590,47 +575,70 @@ elif menu == "12. Inspection Readiness":
     c[0].metric("Average readiness", avg)
     c[1 % len(c)].metric("Red areas", count_equal(inspection, "RAG", "Red"))
     c[2 % len(c)].metric("Amber areas", count_equal(inspection, "RAG", "Amber"))
-    if all(x in inspection.columns for x in ["Area", "Readiness Score (0-100)"]):
-        st.plotly_chart(px.bar(inspection, x="Area", y="Readiness Score (0-100)", color="RAG" if "RAG" in inspection.columns else None, title="Inspection readiness by area"), use_container_width=True)
+    if all(c in inspection.columns for c in ["Area", "Readiness Score (0-100)"]):
+        st.plotly_chart(px.bar(inspection, x="Area", y="Readiness Score (0-100)", color="RAG", title="Inspection Readiness by Area"), use_container_width=True)
     st.dataframe(inspection, use_container_width=True)
 
-elif menu == "13. Executive & Regional Reporting":
-    st.title("Executive Pack, Regional Reporting & Public Affairs KPI")
-    pack = generate_ceo_pack(calendar, obligations, submissions, product_forecast, early_warning, stakeholders, reputation, regional)
 
+elif menu == "13. Reputation & Public Issues":
+    st.title("Country Reputation & Public Issues Monitor")
+    c = st.columns(4 if not mobile_mode else 2)
+    c[0].metric("Reputation score", latest_value(reputation, "Overall Reputation Score"))
+    c[1].metric("Social sentiment", latest_value(reputation, "Social Sentiment Score"))
+    c[2 % len(c)].metric("Complaints index", latest_value(reputation, "Customer Complaints Index"))
+    c[3 % len(c)].metric("Regulatory concern", latest_value(reputation, "Regulatory Concern Index"))
     c1, c2 = st.columns(2 if not mobile_mode else 1)
     with c1:
-        if all(x in kpi.columns for x in ["KPI", "Actual", "RAG"]):
-            st.plotly_chart(px.bar(kpi, x="KPI", y="Actual", color="RAG", title="Public Affairs KPI performance"), use_container_width=True)
+        if all(c in reputation.columns for c in ["Month", "Overall Reputation Score"]):
+            st.plotly_chart(px.line(reputation, x="Month", y="Overall Reputation Score", markers=True, title="Reputation Score Trend"), use_container_width=True)
     with c2:
-        impact_mix = count_frame(regional, "Impact", "Impact")
-        if len(impact_mix):
-            st.plotly_chart(px.pie(impact_mix, names="Impact", values="Count", hole=.5, title="Regional reporting issues by impact"), use_container_width=True)
+        if len(reputation):
+            last = reputation.iloc[-1]
+            drivers = pd.DataFrame({"Driver":["Complaints","Negative Media","Regulatory Concern"],"Index":[last.get("Customer Complaints Index",0),last.get("Negative Media Index",0),last.get("Regulatory Concern Index",0)]})
+            st.plotly_chart(px.bar(drivers, x="Driver", y="Index", title="Latest Reputation Risk Drivers"), use_container_width=True)
+    st.dataframe(reputation, use_container_width=True)
 
-    st.subheader("Country CEO pack")
-    st.markdown(pack)
-    st.download_button("Download Country CEO Pack", pack.encode("utf-8"), "country_ceo_pa_pack.md")
-    st.subheader("Regional reporting")
+
+elif menu == "14. Executive & Regional Reporting":
+    st.title("Executive, EMT & Regional Office Reporting")
+    c = st.columns(5 if not mobile_mode else 2)
+    c[0].metric("RO requests", len(ro_requests))
+    c[1].metric("RO red", count_equal(ro_requests, "RO RAG", "Red"))
+    c[2 % len(c)].metric("Resubmissions", count_equal(ro_requests, "Resubmission Required", "Yes"))
+    c[3 % len(c)].metric("KPI green", count_equal(kpi, "RAG", "Green"))
+    c[4 % len(c)].metric("Regional escalations", count_equal(regional, "Escalation Required", "Yes"))
+    c1, c2 = st.columns(2 if not mobile_mode else 1)
+    with c1:
+        status = count_frame(ro_requests, "Review Status", "Review Status")
+        if len(status): st.plotly_chart(px.bar(status, x="Review Status", y="Count", title="Regional Office Requests by Status"), use_container_width=True)
+    with c2:
+        if all(c in kpi.columns for c in ["KPI", "Actual", "RAG"]):
+            st.plotly_chart(px.bar(kpi, x="KPI", y="Actual", color="RAG", title="Public Affairs KPI Performance"), use_container_width=True)
+    pack = generate_ceo_pack(calendar, obligations, submissions, product_forecast, early_warning, stakeholders, reputation, regional)
+    with st.expander("Country CEO / EMT Pack", expanded=True):
+        st.markdown(pack)
+        st.download_button("Download Country CEO Pack", pack.encode("utf-8"), "country_ceo_pa_pack.md")
+    st.subheader("Regional Office requests")
+    st.dataframe(safe_sort(ro_requests, ["Due Date"]), use_container_width=True)
+    st.subheader("Regional reporting and PA KPI")
     st.dataframe(regional, use_container_width=True)
-    st.download_button("Download Regional Reporting CSV", regional.to_csv(index=False).encode("utf-8-sig"), "regional_reporting.csv")
-    st.subheader("Public Affairs KPI")
     st.dataframe(kpi, use_container_width=True)
 
-elif menu == "14. Knowledge Base":
-    st.title("Regulatory Knowledge Base")
-    query = st.text_input("Search keyword", "product approval")
-    if query and len(knowledge):
-        mask = knowledge.astype(str).apply(lambda col: col.str.contains(query, case=False, na=False)).any(axis=1)
-        view = knowledge[mask]
-    else:
-        view = knowledge
-    st.dataframe(view, use_container_width=True)
-    st.caption("Use only approved internal summaries and source documents. This module does not replace Legal advice.")
 
-elif menu == "15. Regulatory Copilot":
-    st.title("Regulatory Copilot")
-    st.caption("AI-lite assistant based only on loaded dashboard data; it does not replace Legal, Compliance or Public Affairs judgment.")
-    question = st.text_area("Ask a question", "What should I prepare for next week's MOF meeting?")
-    if st.button("Generate answer", type="primary"):
-        answer = regulatory_copilot_answer(question, policies, early_warning, stakeholders, meetings, product_forecast, timeline)
-        st.markdown(answer)
+elif menu == "15. Knowledge Base, Copilot & Templates":
+    st.title("Knowledge Base, Regulatory Copilot & Templates")
+    sub = st.radio("Tool", ["Regulatory Copilot", "Knowledge Base", "Email Templates"], horizontal=True)
+    if sub == "Regulatory Copilot":
+        st.caption("AI-lite assistant based only on loaded dashboard data; it does not replace Legal, Compliance or Public Affairs judgment.")
+        question = st.text_area("Ask a question", "What should I prepare for next week's MOF meeting?")
+        if st.button("Generate answer", type="primary"):
+            st.markdown(regulatory_copilot_answer(question, policies, early_warning, stakeholders, meetings, product_forecast, timeline))
+    elif sub == "Knowledge Base":
+        st.dataframe(knowledge, use_container_width=True)
+    else:
+        if "Use Case" in email_templates.columns and len(email_templates):
+            use_case = st.selectbox("Template", email_templates["Use Case"].astype(str).tolist())
+            tpl = email_templates[email_templates["Use Case"].astype(str) == use_case].iloc[0]
+            st.subheader(tpl.get("Subject", "Email template"))
+            st.text_area("Email body", tpl.get("Email Body Template", ""), height=260)
+        st.dataframe(email_templates, use_container_width=True)
