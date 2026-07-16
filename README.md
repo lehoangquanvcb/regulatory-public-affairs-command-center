@@ -1,4 +1,4 @@
-# Manulife Regulatory and Public Affairs Command Center — v10.6 Performance Edition
+# Manulife Regulatory and Public Affairs Command Center — v10.6.1 Performance Edition
 
 **Author:** Le Hoang Quan
 
@@ -46,3 +46,11 @@ All included records are illustrative and must not be treated as actual Manulife
 - Keeps CSV files as an emergency fallback only.
 - Shows cached load time, workbook fingerprint and a manual **Refresh data cache** control in the sidebar.
 - Retains the 15 consolidated modules, JD-fit analytics, narrow sidebar, mobile mode, banner and author branding from V10.5.
+
+
+## Stability hardening in v10.6.1
+
+- Fixed uninitialized Excel-source state.
+- Added guarded Excel loading with automatic CSV fallback.
+- Preserved workbook caching, fingerprint invalidation, 15-module architecture, mobile mode, visual analytics and JD-fit functionality.
+- Keeps the dashboard available even if an uploaded workbook is malformed or structurally incompatible.

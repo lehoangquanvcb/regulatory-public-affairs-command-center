@@ -90,7 +90,7 @@ section[data-testid="stSidebar"] {
 )
 
 DATA_DIR = Path(__file__).parent / "data"
-DEFAULT_MASTER = DATA_DIR / "Manulife_VN_Regulatory_Public_Affairs_Command_Center_v10_6_performance.xlsx"
+DEFAULT_MASTER = DATA_DIR / "Manulife_VN_Regulatory_Public_Affairs_Command_Center_v10_6_1_stable.xlsx"
 
 
 def clean_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -298,7 +298,7 @@ st.sidebar.markdown("""
 Manulife Regulatory & Public Affairs
 </div>
 <div style="font-size:11.5px;opacity:.8;margin-bottom:8px;">
-Author: Le Hoang Quan<br>v10.6 Performance Edition
+Author: Le Hoang Quan<br>v10.6.1 Performance Stable Edition
 </div>
 """, unsafe_allow_html=True)
 mobile_mode = st.sidebar.toggle("Mobile friendly mode", value=False)
@@ -318,9 +318,20 @@ else:
     source_name = "data/*.csv"
 
 load_started = time.perf_counter()
+excel_load_error = None
 if master_bytes is not None:
     workbook_fingerprint = hashlib.sha256(master_bytes).hexdigest()[:12]
-    D, sheet_names = build_excel_data_bundle(master_bytes, workbook_fingerprint)
+    try:
+        D, sheet_names = build_excel_data_bundle(master_bytes, workbook_fingerprint)
+    except Exception as exc:
+        # Stable fallback: a malformed or partially incompatible workbook must not
+        # prevent the dashboard from opening. CSV data remains available.
+        excel_load_error = f"{type(exc).__name__}: {exc}"
+        D = build_csv_data_bundle(csv_signature())
+        sheet_names = []
+        source_mode = "CSV fallback after Excel load error"
+        source_name = "data/*.csv"
+        workbook_fingerprint = "csv-fallback"
 else:
     workbook_fingerprint = "csv-fallback"
     D = build_csv_data_bundle(csv_signature())
@@ -342,7 +353,10 @@ if st.sidebar.button("Refresh data cache", use_container_width=True):
     st.rerun()
 with st.sidebar.expander("Data validation details"):
     st.dataframe(validation, use_container_width=True, hide_index=True)
-    if excel_source is None:
+    if excel_load_error:
+        st.error("Excel could not be loaded. CSV fallback is active.")
+        st.caption(excel_load_error)
+    elif master_bytes is None:
         st.warning("Integrated Excel master was not found; CSV fallback is active.")
     elif data_quality_score < 90:
         st.warning("Some datasets are empty or missing expected columns. Review the validation table.")
