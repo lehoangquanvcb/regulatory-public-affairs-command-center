@@ -1,23 +1,29 @@
-# Manulife Regulatory and Public Affairs Command Center — v10.6.1 Performance Edition
+# Manulife Regulatory and Public Affairs Command Center — V11 Enterprise Edition
 
-**Author:** Le Hoang Quan
+**Author: Le Hoang Quan**
 
-V10.6 keeps the strongest functionality and visual analytics from prior versions, removes Interview Mode, consolidates overlapping dashboard modules into 15 navigation items, and makes the Excel master workbook the single source of truth while caching the workbook in memory for faster reruns.
+V11 is the Excel-only enterprise edition of the Regulatory and Public Affairs Command Center. It retains the 15 consolidated, JD-aligned modules and the visual, mobile and performance improvements from prior versions, while removing duplicate CSV data sources.
 
-## Data-source priority
+## Architecture
 
-1. Excel workbook uploaded through the Streamlit sidebar
-2. Default integrated master workbook in `data/`
-3. CSV fallback files, used only if the corresponding Excel sheet is unavailable
+```text
+V11 Excel Master (single source of truth)
+        ↓
+Cached Excel loader (one workbook read per fingerprint)
+        ↓
+Validation and metric transformation layer
+        ↓
+15 Streamlit modules, KPI cards, charts and executive outputs
+```
 
-## Daily operating workflow
+## Data source behavior
 
-1. Update the relevant sheets in `Manulife_VN_Regulatory_Public_Affairs_Command_Center_v10_6_performance.xlsx`.
-2. Save the workbook.
-3. Upload it in the Streamlit sidebar, or replace the default workbook in `data/` and redeploy.
-4. Review the Data Source and Data Validation section in the sidebar.
+1. An Excel workbook uploaded in the sidebar takes priority.
+2. Otherwise, the app loads the default workbook in `data/`.
+3. There is no CSV fallback. Missing or incompatible sheets are shown in the validation panel.
+4. Editing and re-uploading the workbook creates a new fingerprint and refreshes the cached data automatically.
 
-## Consolidated dashboard modules
+## Dashboard modules
 
 1. Country CEO Dashboard
 2. Daily & Department Operations
@@ -35,22 +41,19 @@ V10.6 keeps the strongest functionality and visual analytics from prior versions
 14. Executive & Regional Reporting
 15. Knowledge Base, Copilot & Templates
 
-All included records are illustrative and must not be treated as actual Manulife information.
+## Run locally
 
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-## V10.6 performance architecture
+## Master workbook
 
-- Opens the Excel workbook once per file fingerprint instead of once per dataset.
-- Caches the raw workbook sheets and transformed dashboard bundle with `st.cache_data`.
-- Automatically invalidates cache when uploaded workbook bytes or the deployed master file change.
-- Keeps CSV files as an emergency fallback only.
-- Shows cached load time, workbook fingerprint and a manual **Refresh data cache** control in the sidebar.
-- Retains the 15 consolidated modules, JD-fit analytics, narrow sidebar, mobile mode, banner and author branding from V10.5.
+Update only:
 
+```text
+data/Manulife_VN_Regulatory_Public_Affairs_Command_Center_v11_enterprise.xlsx
+```
 
-## Stability hardening in v10.6.1
-
-- Fixed uninitialized Excel-source state.
-- Added guarded Excel loading with automatic CSV fallback.
-- Preserved workbook caching, fingerprint invalidation, 15-module architecture, mobile mode, visual analytics and JD-fit functionality.
-- Keeps the dashboard available even if an uploaded workbook is malformed or structurally incompatible.
+Keep sheet names and column headers unchanged. The workbook includes `00_Read_Me`, `01_Data_Catalog`, `02_Data_Quality`, and `03_V11_Architecture` for governance and guidance.

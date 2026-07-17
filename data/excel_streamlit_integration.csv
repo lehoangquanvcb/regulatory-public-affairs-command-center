@@ -1,6 +1,0 @@
-﻿Component,Role,Owner,How to Use
-Excel Master Tracker,Single source of truth for operations and internal coordination,Public Affairs,"Maintain official trackers, manual updates and audit trail"
-CSV Data Files,Bridge between Excel and Streamlit,Public Affairs / Analyst,Export selected sheets to CSV or update /data files in GitHub
-Streamlit App,Management visibility and interview demo,Public Affairs,Read CSV defaults or upload Excel master; show dashboards and reports
-GitHub Repository,Version control and deployment source,Owner,"Commit app.py, requirements.txt and data files"
-Streamlit Cloud,Web deployment for demo,Owner,Set app.py as main file; replace demo data when needed

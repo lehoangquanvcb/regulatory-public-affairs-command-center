@@ -5,3 +5,5 @@ venv/
 ~$*.xlsx
 *.tmp
 .DS_Store
+*.csv
+archive/

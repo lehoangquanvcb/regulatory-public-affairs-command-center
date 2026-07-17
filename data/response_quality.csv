@@ -1,5 +1,0 @@
-﻿Request ID,Regulator,Request Topic,Internal Function,Due Date,Completeness (1-5),Accuracy (1-5),Legal Consistency (1-5),Regulatory Relevance (1-5),Evidence Quality (1-5),Formatting (1-5),Rework Required,Status,Owner
-REQ-001,ISA,Product clarification,Product,2026-07-25,5,4,4,5,4,5,No,Ready for submission,Product + PA
-REQ-002,MOF,Capital update,Finance,2026-07-30,3,5,4,4,3,4,Yes,Internal review,Finance + PA
-REQ-003,ISA,Complaint statistics,Customer Service,2026-08-02,4,4,3,4,3,4,Yes,Inputs pending,Customer + Compliance
-REQ-004,SBV,Bancassurance conduct data,Distribution,2026-08-08,4,4,4,4,4,4,No,Drafting,Distribution + PA

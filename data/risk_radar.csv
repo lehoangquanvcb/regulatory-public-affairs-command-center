@@ -1,7 +1,0 @@
-﻿Risk ID,Regulatory Topic,Agency,Probability (1-5),Impact (1-5),Preparedness (1-5),Risk Score,Risk Level,Early Warning Signal,Recommended Action,Owner
-RR-001,Capital adequacy and solvency update,ISA,4,5,3,=D4*E4/F4,High,Draft circular discussion and industry consultation,Prepare capital impact note and engage via IAV,Finance + PA
-RR-002,Product approval process tightening,ISA,5,5,3,=D5*E5/F5,High,More detailed Q&A requests from regulator,Create product dossier checklist and Q&A evidence bank,Product + PA
-RR-003,Bancassurance conduct guideline,SBV / MOF,4,5,3,=D6*E6/F6,High,Banking sector conduct review and consumer complaints,Develop customer-protection narrative and sales governance evidence,Bancassurance + Compliance
-RR-004,Data localization and privacy enforcement,MIC,4,4,2,=D7*E7/F7,High,New data consultation and privacy inspections,Prepare data-flow map and compliance briefing,Digital + Legal
-RR-005,Consumer complaint transparency requirement,VCA / ISA,3,4,3,=D8*E8/F8,Medium,Increased complaint reporting and media attention,Prepare complaint KPI pack and remediation narrative,Compliance
-RR-006,Mandatory ESG disclosure,MOF,3,2,3,=D9*E9/F9,Low,Green finance roadmap and peer disclosure practices,Create baseline ESG disclosure template,Finance + PA

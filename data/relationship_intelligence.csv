@@ -1,7 +1,0 @@
-﻿Regulator,Power (1-5),Interest (1-5),Relationship Strength (1-5),Sentiment,Trend,Engagement Priority,Key Concerns,Next Engagement,Relationship Risk Score
-MOF,5,5,4,Positive,Improving,Critical,"Capital strength, market stability",Quarterly strategic dialogue,
-ISA,5,5,3,Neutral,Stable,Critical,"Market conduct, product transparency",Monthly technical session,
-IAV,3,4,5,Positive,Stable,High,Industry alignment,Join working group,
-SBV,4,3,3,Neutral,Stable,High,"Bancassurance, system risk",Quarterly industry dialogue,
-MIC,3,4,2,Cautious,Slightly Negative,Medium,Data privacy and localization,Digital policy roundtable,
-VCA,4,4,3,Cautious,Stable,High,Consumer complaints,Consumer protection briefing,

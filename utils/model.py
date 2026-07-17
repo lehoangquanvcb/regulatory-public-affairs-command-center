@@ -1,4 +1,4 @@
-MODEL_VERSION = "10.6 Performance Edition"
+MODEL_VERSION = "11 Enterprise Edition"
 
 import pandas as pd
 
@@ -30,8 +30,6 @@ def parse_dates(df, cols):
             df[col] = pd.to_datetime(df[col], errors="coerce")
     return df
 
-def load_csv(path):
-    return pd.read_csv(path)
 
 def add_calendar_metrics(df):
     df = ensure_columns(df, ["Due Date", "Status"])
